@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.vite/
+.vitest/
+coverage/
+
+.npm-cache/
+npm-cache/
+npm-cache-*/
+.package-tarballs/
+corepack-home/
+
+*.local
+unlink-test.tmp
+
+scripts/install-deps.mjs
