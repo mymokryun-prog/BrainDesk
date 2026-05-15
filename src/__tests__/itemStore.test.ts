@@ -3,7 +3,7 @@ import { createInitialItems, createItemStore } from '../store/itemStore';
 
 describe('item store', () => {
   it('creates, updates, deletes, and persists node positions', () => {
-    const store = createItemStore({ seed: false });
+    const store = createItemStore({ seed: false, persist: false });
 
     const item = store.createItem({
       title: 'Board review',
@@ -30,7 +30,7 @@ describe('item store', () => {
   });
 
   it('creates relationships between existing items', () => {
-    const store = createItemStore({ seed: false });
+    const store = createItemStore({ seed: false, persist: false });
     const source = store.createItem({ title: 'Risk', category: 'Top Priority', type: 'risk' });
     const target = store.createItem({ title: 'Decision', category: 'Company', type: 'decision' });
 

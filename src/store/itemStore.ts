@@ -46,6 +46,7 @@ interface ItemState {
 
 interface StoreOptions {
   seed?: boolean;
+  persist?: boolean;
 }
 
 const defaultFilters: ItemFilters = {
@@ -66,6 +67,7 @@ type ItemStoreApi = StoreApi<ItemState> & {
 };
 
 export function createItemStore(options: StoreOptions = { seed: true }): ItemStoreApi {
+  const persistEnabled = options.persist ?? true;
   const initialItems = options.seed === false ? [] : createInitialItems();
   const initialRelationships = options.seed === false ? [] : createInitialRelationships();
 
@@ -98,7 +100,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
         items: { ...state.items, [item.id]: item },
         selectedItemId: item.id,
       }));
-      persistCurrent(get);
+      persistCurrent(get, persistEnabled);
       return item;
     },
     updateItem: (id, updates) => {
@@ -118,7 +120,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
           },
         };
       });
-      persistCurrent(get);
+      persistCurrent(get, persistEnabled);
     },
     deleteItem: (id) => {
       set((state) => {
@@ -135,7 +137,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
           selectedItemId: state.selectedItemId === id ? Object.keys(items)[0] : state.selectedItemId,
         };
       });
-      persistCurrent(get);
+      persistCurrent(get, persistEnabled);
     },
     updateItemPosition: (id, position) => {
       get().updateItem(id, { position });
@@ -159,7 +161,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
       set((state) => ({
         relationships: { ...state.relationships, [relationship.id]: relationship },
       }));
-      persistCurrent(get);
+      persistCurrent(get, persistEnabled);
       return relationship;
     },
     deleteRelationship: (id) => {
@@ -167,7 +169,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
         const { [id]: _deleted, ...relationships } = state.relationships;
         return { relationships };
       });
-      persistCurrent(get);
+      persistCurrent(get, persistEnabled);
     },
     setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
     addAttachment: (itemId, file, fileName) => {
@@ -224,7 +226,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
         relationships: toRecord(relationships),
         selectedItemId: items[0]?.id,
       });
-      persistCurrent(get);
+      persistCurrent(get, persistEnabled);
     },
     loadPersistedWorkspace: async () => {
       try {
@@ -299,7 +301,9 @@ function toRecord<T extends { id: string }>(items: T[]): Record<string, T> {
   return Object.fromEntries(items.map((item) => [item.id, item]));
 }
 
-function persistCurrent(get: () => ItemState): void {
+function persistCurrent(get: () => ItemState, persistEnabled: boolean): void {
+  if (!persistEnabled) return;
+
   const state = get();
   void persistWorkspace(Object.values(state.items), Object.values(state.relationships)).catch((error) => {
     console.error('Could not persist workspace', error);
