@@ -3,6 +3,7 @@ import { Command, Search } from 'lucide-react';
 import { Button } from '../common/Button';
 import {
   createItemInputFromCommandQuery,
+  createItemSearchCommands,
   filterCommands,
   type CommandAction,
 } from '../../utils/commandPalette';
@@ -16,6 +17,7 @@ interface CommandPaletteProps {
 export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
+  const itemsById = useItemStore((state) => state.items);
   const filters = useItemStore((state) => state.filters);
   const selectedItemId = useItemStore((state) => state.selectedItemId);
   const isFocusMode = useItemStore((state) => state.isFocusMode);
@@ -158,6 +160,10 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     ],
     [createItem, deleteItem, filters.category, isFocusMode, selectItem, selectedItemId, setFilters, setFocusMode, setViewMode],
   );
+  const itemCommands = useMemo(
+    () => createItemSearchCommands(Object.values(itemsById), selectItem),
+    [itemsById, selectItem],
+  );
 
   const dynamicCreateCommand = useMemo<CommandAction | undefined>(() => {
     const input = createItemInputFromCommandQuery(query, filters.category);
@@ -177,9 +183,11 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   }, [createItem, filters.category, query, selectItem]);
 
   const filteredCommands = useMemo(() => {
-    const filtered = filterCommands(commands, query);
+    const filteredActions = filterCommands(commands, query);
+    const filteredItems = filterCommands(itemCommands, query).slice(0, 8);
+    const filtered = [...filteredItems, ...filteredActions];
     return dynamicCreateCommand ? [dynamicCreateCommand, ...filtered] : filtered;
-  }, [commands, dynamicCreateCommand, query]);
+  }, [commands, dynamicCreateCommand, itemCommands, query]);
 
   function runCommand(command: CommandAction) {
     command.run();

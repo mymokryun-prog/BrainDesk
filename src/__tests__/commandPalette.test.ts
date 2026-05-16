@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   createItemInputFromCommandQuery,
+  createItemSearchCommands,
   filterCommands,
   isEditableShortcutTarget,
   type CommandAction,
 } from '../utils/commandPalette';
+import type { Item } from '../types/item';
 
 const commands: CommandAction[] = [
   {
@@ -37,8 +39,8 @@ describe('command palette utilities', () => {
   });
 
   it('creates item input from note and task command queries', () => {
-    expect(createItemInputFromCommandQuery('task 계약서 확인', 'Company')).toMatchObject({
-      title: '계약서 확인',
+    expect(createItemInputFromCommandQuery('task contract review', 'Company')).toMatchObject({
+      title: 'contract review',
       type: 'task',
       category: 'Company',
     });
@@ -49,4 +51,40 @@ describe('command palette utilities', () => {
     });
     expect(createItemInputFromCommandQuery('task', 'Company')).toBeUndefined();
   });
+
+  it('creates searchable item selection commands', () => {
+    const selectedIds: string[] = [];
+    const itemCommands = createItemSearchCommands(
+      [
+        createItem('item-1', 'Board Review', ['finance']),
+        createItem('item-2', 'Family Plan', ['home']),
+      ],
+      (id) => selectedIds.push(id),
+    );
+
+    expect(filterCommands(itemCommands, 'finance').map((command) => command.id)).toEqual(['open-item-item-1']);
+
+    itemCommands[0].run();
+
+    expect(selectedIds).toEqual(['item-1']);
+  });
 });
+
+function createItem(id: string, title: string, tags: string[]): Item {
+  return {
+    id,
+    title,
+    tags,
+    description: 'Searchable item',
+    type: 'note',
+    category: 'Company',
+    status: 'active',
+    priority: 'medium',
+    dueDate: '',
+    position: { x: 0, y: 0 },
+    attachments: [],
+    checklist: [],
+    createdAt: '2026-05-16T00:00:00.000Z',
+    updatedAt: '2026-05-16T00:00:00.000Z',
+  };
+}
