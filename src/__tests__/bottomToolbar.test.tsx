@@ -13,6 +13,7 @@ vi.mock('../utils/importExport', async (importOriginal) => {
 
 describe('BottomToolbar', () => {
   beforeEach(() => {
+    localStorage.clear();
     vi.mocked(exportBackupZip).mockResolvedValue(new Blob(['backup'], { type: 'application/zip' }));
     Object.defineProperty(URL, 'createObjectURL', {
       configurable: true,
@@ -70,5 +71,20 @@ describe('BottomToolbar', () => {
     act(() => dismissStatus?.());
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('records and shows the last backup time after export', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-17T01:23:00.000Z'));
+    render(<BottomToolbar />);
+
+    fireEvent.click(screen.getByTitle('Export full ZIP backup'));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText('Last backup: 2026-05-17 01:23')).toBeInTheDocument();
+    expect(localStorage.getItem('neurotask:lastBackupAt')).toBe('2026-05-17T01:23:00.000Z');
   });
 });

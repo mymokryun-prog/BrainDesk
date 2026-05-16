@@ -5,8 +5,23 @@ import { useItemStore } from '../../store/itemStore';
 import { exportBackupZip, importBackupFile } from '../../utils/importExport';
 import { createBackupStatus, type ToolbarStatus } from '../../utils/toolbarStatus';
 
+const LAST_BACKUP_STORAGE_KEY = 'neurotask:lastBackupAt';
+
+function readLastBackupAt(): string | undefined {
+  try {
+    return localStorage.getItem(LAST_BACKUP_STORAGE_KEY) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function formatBackupTime(isoDate: string): string {
+  return isoDate.slice(0, 16).replace('T', ' ');
+}
+
 export function BottomToolbar() {
   const [toolbarStatus, setToolbarStatus] = useState<ToolbarStatus | undefined>();
+  const [lastBackupAt, setLastBackupAt] = useState<string | undefined>(() => readLastBackupAt());
   const itemsById = useItemStore((state) => state.items);
   const relationshipsById = useItemStore((state) => state.relationships);
   const viewMode = useItemStore((state) => state.viewMode);
@@ -26,6 +41,16 @@ export function BottomToolbar() {
     return () => window.clearTimeout(timeoutId);
   }, [toolbarStatus]);
 
+  function recordBackupTime() {
+    const backupAt = new Date().toISOString();
+    setLastBackupAt(backupAt);
+    try {
+      localStorage.setItem(LAST_BACKUP_STORAGE_KEY, backupAt);
+    } catch {
+      // The timestamp is helpful metadata, but export/import should still succeed if storage is blocked.
+    }
+  }
+
   async function handleExport() {
     try {
       const backup = await exportBackupZip(items, relationships);
@@ -35,6 +60,7 @@ export function BottomToolbar() {
       anchor.download = `neurotask-canvas-${new Date().toISOString().slice(0, 10)}.zip`;
       anchor.click();
       URL.revokeObjectURL(url);
+      recordBackupTime();
       setToolbarStatus(createBackupStatus('export-success'));
     } catch (error) {
       setToolbarStatus(createBackupStatus('export-error', error));
@@ -45,6 +71,7 @@ export function BottomToolbar() {
     try {
       const backup = await importBackupFile(file);
       replaceWorkspace(backup.items, backup.relationships);
+      recordBackupTime();
       setToolbarStatus(createBackupStatus('import-success'));
     } catch (error) {
       setToolbarStatus(createBackupStatus('import-error', error));
@@ -69,6 +96,11 @@ export function BottomToolbar() {
           >
             <X size={14} aria-hidden="true" />
           </button>
+        </div>
+      )}
+      {lastBackupAt && (
+        <div className="rounded-md border border-graphite/10 bg-white/80 px-3 py-1.5 text-[11px] font-medium text-graphite shadow-soft backdrop-blur">
+          Last backup: {formatBackupTime(lastBackupAt)}
         </div>
       )}
       <div className="flex max-w-full items-center gap-2 overflow-x-auto rounded-lg border border-white/70 bg-white/88 p-2 shadow-panel backdrop-blur">
