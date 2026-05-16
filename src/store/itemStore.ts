@@ -13,8 +13,19 @@ import type {
 } from '../types/item';
 import { loadWorkspace, persistWorkspace } from '../db/repositories';
 import { nowIso } from '../utils/dates';
-import { createId } from '../utils/ids';
 import { createInitialItems, createInitialRelationships } from '../utils/seedData';
+import {
+  createAttachmentRecord,
+  createChecklistEntry,
+  createItemFromInput,
+  createRelationshipRecord,
+  deleteChecklistEntry,
+  removeRelationshipsForItem,
+  restoreAttachmentPreviews,
+  revokeAttachmentPreviewUrl,
+  toggleChecklistEntry,
+  updateChecklistEntryLabel,
+} from './itemStoreHelpers';
 
 export { createInitialItems } from '../utils/seedData';
 
@@ -90,23 +101,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
     isFocusMode: false,
     isReady: options.seed !== false,
     createItem: (input) => {
-      const timestamp = nowIso();
-      const item: Item = {
-        id: createId('item'),
-        title: input.title,
-        description: input.description ?? '',
-        type: input.type ?? 'note',
-        category: input.category ?? 'Personal',
-        status: input.status ?? 'active',
-        priority: input.priority ?? 'medium',
-        dueDate: input.dueDate ?? '',
-        tags: input.tags ?? [],
-        position: input.position ?? { x: 420 + Math.random() * 180, y: 240 + Math.random() * 160 },
-        attachments: [],
-        checklist: [],
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      };
+      const item = createItemFromInput(input);
 
       set((state) => ({
         items: { ...state.items, [item.id]: item },
@@ -137,11 +132,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
     deleteItem: (id) => {
       set((state) => {
         const { [id]: _deleted, ...items } = state.items;
-        const relationships = Object.fromEntries(
-          Object.entries(state.relationships).filter(
-            ([, relationship]) => relationship.sourceItemId !== id && relationship.targetItemId !== id,
-          ),
-        );
+        const relationships = removeRelationshipsForItem(state.relationships, id);
 
         return {
           items,
@@ -156,19 +147,11 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
     },
     selectItem: (id) => set({ selectedItemId: id }),
     createRelationship: (sourceItemId, targetItemId, input = {}) => {
-      const timestamp = nowIso();
-      const relationship: Relationship = {
-        id: createId('rel'),
-        sourceItemId,
-        targetItemId,
-        label: input.label ?? 'related',
-        strength: input.strength ?? 2,
-        createdAt: timestamp,
-      };
-
       if (!get().items[sourceItemId] || !get().items[targetItemId] || sourceItemId === targetItemId) {
         throw new Error('Relationships require two different existing items.');
       }
+
+      const relationship = createRelationshipRecord(sourceItemId, targetItemId, input);
 
       set((state) => ({
         relationships: { ...state.relationships, [relationship.id]: relationship },
@@ -194,19 +177,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
     addAttachment: (itemId, file, fileName) => {
       const item = get().items[itemId];
       if (!item) throw new Error('Select an item before attaching a file.');
-      if (file.size > 25 * 1024 * 1024) throw new Error('Attachments must be 25 MB or smaller.');
-
-      const timestamp = nowIso();
-      const attachment: Attachment = {
-        id: createId('att'),
-        itemId,
-        fileName: fileName ?? ('name' in file ? file.name : 'Pasted image'),
-        fileType: file.type || 'application/octet-stream',
-        fileSize: file.size,
-        blob: file,
-        previewUrl: createAttachmentPreviewUrl(file),
-        createdAt: timestamp,
-      };
+      const attachment = createAttachmentRecord(itemId, file, fileName);
 
       get().updateItem(itemId, {
         attachments: [...item.attachments, attachment],
@@ -229,26 +200,16 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
       if (!item) return;
 
       get().updateItem(itemId, {
-        checklist: item.checklist.map((entry) =>
-          entry.id === checklistItemId ? { ...entry, completed: !entry.completed } : entry,
-        ),
+        checklist: toggleChecklistEntry(item.checklist, checklistItemId),
       });
     },
     addChecklistItem: (itemId, label) => {
       const item = get().items[itemId];
-      const trimmed = label.trim();
-      if (!item || !trimmed) return;
+      const checklistEntry = createChecklistEntry(label);
+      if (!item || !checklistEntry) return;
 
       get().updateItem(itemId, {
-        checklist: [
-          ...item.checklist,
-          {
-            id: createId('check'),
-            label: trimmed,
-            completed: false,
-            createdAt: nowIso(),
-          },
-        ],
+        checklist: [...item.checklist, checklistEntry],
       });
     },
     updateChecklistItem: (itemId, checklistItemId, label) => {
@@ -256,9 +217,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
       if (!item) return;
 
       get().updateItem(itemId, {
-        checklist: item.checklist.map((entry) =>
-          entry.id === checklistItemId ? { ...entry, label } : entry,
-        ),
+        checklist: updateChecklistEntryLabel(item.checklist, checklistItemId, label),
       });
     },
     deleteChecklistItem: (itemId, checklistItemId) => {
@@ -266,7 +225,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
       if (!item) return;
 
       get().updateItem(itemId, {
-        checklist: item.checklist.filter((entry) => entry.id !== checklistItemId),
+        checklist: deleteChecklistEntry(item.checklist, checklistItemId),
       });
     },
     replaceWorkspace: (items, relationships) => {
@@ -357,46 +316,4 @@ function persistCurrent(get: () => ItemState, persistEnabled: boolean): void {
   void persistWorkspace(Object.values(state.items), Object.values(state.relationships)).catch((error) => {
     console.error('Could not persist workspace', error);
   });
-}
-
-function restoreAttachmentPreviews(item: Item): Item {
-  return {
-    ...item,
-    attachments: item.attachments.map((attachment) => {
-      const blob = normalizeAttachmentBlob(attachment.blob, attachment.fileType);
-      return {
-        ...attachment,
-        blob,
-        previewUrl: createAttachmentPreviewUrl(blob),
-      };
-    }),
-  };
-}
-
-function createAttachmentPreviewUrl(blob: Blob): string | undefined {
-  if (!isBlobLike(blob) || !blob.type.startsWith('image/') || typeof URL.createObjectURL !== 'function') {
-    return undefined;
-  }
-
-  return URL.createObjectURL(blob);
-}
-
-function normalizeAttachmentBlob(blob: Blob, fileType: string): Blob {
-  return isBlobLike(blob) ? blob : new Blob([], { type: fileType });
-}
-
-function isBlobLike(value: unknown): value is Blob {
-  return (
-    value instanceof Blob ||
-    (typeof value === 'object' &&
-      value !== null &&
-      typeof (value as Blob).size === 'number' &&
-      typeof (value as Blob).type === 'string')
-  );
-}
-
-function revokeAttachmentPreviewUrl(url: string): void {
-  if (typeof URL.revokeObjectURL === 'function') {
-    URL.revokeObjectURL(url);
-  }
 }
