@@ -41,11 +41,12 @@ npm run test
 - Persist items, positions, relationships, checklists, and attachments in IndexedDB
 - Attach files and images
 - Paste screenshots/images into the selected item
-- Export and import JSON backups
+- Export full ZIP backups with attachment files
+- Import ZIP backups and legacy JSON backups
 
 ## Notes
 
-JSON backup exports attachment metadata but not binary file contents. Full binary backup can be added later with a ZIP-based export without changing the core data model.
+Legacy JSON backup exports attachment metadata but not binary file contents. ZIP backup includes `backup.json` plus attachment blobs.
 
 Markdown preview supports a small safe subset: headings, paragraphs, bullets, quotes, and fenced code blocks.
 

@@ -271,7 +271,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
     },
     replaceWorkspace: (items, relationships) => {
       set({
-        items: toRecord(items),
+        items: toRecord(items.map(restoreAttachmentPreviews)),
         relationships: toRecord(relationships),
         selectedItemId: items[0]?.id,
       });

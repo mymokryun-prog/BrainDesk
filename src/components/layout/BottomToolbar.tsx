@@ -2,7 +2,7 @@ import { Braces, CalendarDays, Command, Download, Focus, List, Scan, Upload } fr
 import { useState } from 'react';
 import { Button } from '../common/Button';
 import { useItemStore } from '../../store/itemStore';
-import { exportBackup, importBackup } from '../../utils/importExport';
+import { exportBackupZip, importBackupFile } from '../../utils/importExport';
 
 export function BottomToolbar() {
   const [importError, setImportError] = useState('');
@@ -16,20 +16,24 @@ export function BottomToolbar() {
   const items = Object.values(itemsById);
   const relationships = Object.values(relationshipsById);
 
-  function handleExport() {
-    const json = exportBackup(items, relationships);
-    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `neurotask-canvas-${new Date().toISOString().slice(0, 10)}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+  async function handleExport() {
+    try {
+      const backup = await exportBackupZip(items, relationships);
+      const url = URL.createObjectURL(backup);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `neurotask-canvas-${new Date().toISOString().slice(0, 10)}.zip`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      setImportError('');
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'Could not export backup.');
+    }
   }
 
   async function handleImport(file: File) {
     try {
-      const text = await file.text();
-      const backup = importBackup(text);
+      const backup = await importBackupFile(file);
       replaceWorkspace(backup.items, backup.relationships);
       setImportError('');
     } catch (error) {
@@ -74,12 +78,12 @@ export function BottomToolbar() {
           variant={viewMode === 'brain' ? 'primary' : 'secondary'}
           onClick={() => setViewMode('brain')}
         />
-        <Button title="Export data" icon={<Download size={16} />} onClick={handleExport} />
+        <Button title="Export full ZIP backup" icon={<Download size={16} />} onClick={() => void handleExport()} />
         <label>
           <input
             className="hidden"
             type="file"
-            accept="application/json"
+            accept="application/json,.json,application/zip,.zip"
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) void handleImport(file);
