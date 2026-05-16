@@ -47,6 +47,18 @@ describe('item store', () => {
     });
   });
 
+  it('adds and deletes attachments on an item', () => {
+    const store = createItemStore({ seed: false, persist: false });
+    const item = store.createItem({ title: 'Screenshot memo', category: 'Personal', type: 'screenshot' });
+    const attachment = store.getState().addAttachment(item.id, new Blob(['image'], { type: 'image/png' }), 'memo.png');
+
+    expect(store.getState().items[item.id].attachments).toHaveLength(1);
+
+    store.getState().deleteAttachment(item.id, attachment.id);
+
+    expect(store.getState().items[item.id].attachments).toHaveLength(0);
+  });
+
   it('starts with useful sample nodes when seeded', () => {
     const items = createInitialItems();
 

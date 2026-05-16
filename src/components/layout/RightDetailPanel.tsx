@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link2, Paperclip, Plus, Trash2 } from 'lucide-react';
+import { Download, Link2, Paperclip, Plus, Trash2 } from 'lucide-react';
 import { Button } from '../common/Button';
 import { categories, itemTypes, priorities, statuses, type Item } from '../../types/item';
 import { useItemStore } from '../../store/itemStore';
@@ -11,6 +11,7 @@ export function RightDetailPanel() {
   const updateItem = useItemStore((state) => state.updateItem);
   const deleteItem = useItemStore((state) => state.deleteItem);
   const addAttachment = useItemStore((state) => state.addAttachment);
+  const deleteAttachment = useItemStore((state) => state.deleteAttachment);
   const addChecklistItem = useItemStore((state) => state.addChecklistItem);
   const toggleChecklistItem = useItemStore((state) => state.toggleChecklistItem);
   const createRelationship = useItemStore((state) => state.createRelationship);
@@ -56,6 +57,15 @@ export function RightDetailPanel() {
 
   function updateSelected(updates: Partial<Item>) {
     if (selectedItem) updateItem(selectedItem.id, updates);
+  }
+
+  function downloadAttachment(attachment: Item['attachments'][number]) {
+    const url = URL.createObjectURL(attachment.blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = attachment.fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -241,7 +251,25 @@ export function RightDetailPanel() {
                   />
                 )}
                 <div className="truncate font-medium">{attachment.fileName}</div>
-                <div className="text-xs text-graphite/60">{Math.ceil(attachment.fileSize / 1024)} KB</div>
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <div className="text-xs text-graphite/60">{Math.ceil(attachment.fileSize / 1024)} KB</div>
+                  <div className="flex gap-1">
+                    <button
+                      className="rounded-md p-1 text-graphite/65 hover:bg-white"
+                      title="Download attachment"
+                      onClick={() => downloadAttachment(attachment)}
+                    >
+                      <Download size={14} />
+                    </button>
+                    <button
+                      className="rounded-md p-1 text-coral hover:bg-white"
+                      title="Delete attachment"
+                      onClick={() => deleteAttachment(selectedItem.id, attachment.id)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

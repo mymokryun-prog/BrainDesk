@@ -38,6 +38,7 @@ interface ItemState {
   deleteRelationship: (id: string) => void;
   setFilters: (filters: Partial<ItemFilters>) => void;
   addAttachment: (itemId: string, file: File | Blob, fileName?: string) => Attachment;
+  deleteAttachment: (itemId: string, attachmentId: string) => void;
   toggleChecklistItem: (itemId: string, checklistItemId: string) => void;
   addChecklistItem: (itemId: string, label: string) => void;
   replaceWorkspace: (items: Item[], relationships: Relationship[]) => void;
@@ -175,6 +176,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
     addAttachment: (itemId, file, fileName) => {
       const item = get().items[itemId];
       if (!item) throw new Error('Select an item before attaching a file.');
+      if (file.size > 25 * 1024 * 1024) throw new Error('Attachments must be 25 MB or smaller.');
 
       const timestamp = nowIso();
       const attachment: Attachment = {
@@ -184,7 +186,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
         fileType: file.type || 'application/octet-stream',
         fileSize: file.size,
         blob: file,
-        previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+        previewUrl: createAttachmentPreviewUrl(file),
         createdAt: timestamp,
       };
 
@@ -192,6 +194,17 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
         attachments: [...item.attachments, attachment],
       });
       return attachment;
+    },
+    deleteAttachment: (itemId, attachmentId) => {
+      const item = get().items[itemId];
+      if (!item) return;
+
+      const attachment = item.attachments.find((entry) => entry.id === attachmentId);
+      if (attachment?.previewUrl) revokeAttachmentPreviewUrl(attachment.previewUrl);
+
+      get().updateItem(itemId, {
+        attachments: item.attachments.filter((entry) => entry.id !== attachmentId),
+      });
     },
     toggleChecklistItem: (itemId, checklistItemId) => {
       const item = get().items[itemId];
@@ -315,7 +328,21 @@ function restoreAttachmentPreviews(item: Item): Item {
     ...item,
     attachments: item.attachments.map((attachment) => ({
       ...attachment,
-      previewUrl: attachment.fileType.startsWith('image/') ? URL.createObjectURL(attachment.blob) : undefined,
+      previewUrl: createAttachmentPreviewUrl(attachment.blob),
     })),
   };
+}
+
+function createAttachmentPreviewUrl(blob: Blob): string | undefined {
+  if (!blob.type.startsWith('image/') || typeof URL.createObjectURL !== 'function') {
+    return undefined;
+  }
+
+  return URL.createObjectURL(blob);
+}
+
+function revokeAttachmentPreviewUrl(url: string): void {
+  if (typeof URL.revokeObjectURL === 'function') {
+    URL.revokeObjectURL(url);
+  }
 }
