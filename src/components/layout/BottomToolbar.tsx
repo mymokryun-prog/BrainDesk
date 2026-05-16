@@ -1,4 +1,4 @@
-import { Braces, Command, Download, Focus, List, Scan, Upload } from 'lucide-react';
+import { Braces, CalendarDays, Command, Download, Focus, List, Scan, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../common/Button';
 import { useItemStore } from '../../store/itemStore';
@@ -61,6 +61,12 @@ export function BottomToolbar() {
           icon={<List size={16} />}
           variant={viewMode === 'list' ? 'primary' : 'secondary'}
           onClick={() => setViewMode('list')}
+        />
+        <Button
+          title="Agenda view"
+          icon={<CalendarDays size={16} />}
+          variant={viewMode === 'agenda' ? 'primary' : 'secondary'}
+          onClick={() => setViewMode('agenda')}
         />
         <Button
           title="Brain view"

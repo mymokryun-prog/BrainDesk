@@ -7,6 +7,7 @@ import { useItemStore } from '../../store/itemStore';
 import { CommandPalette } from '../command/CommandPalette';
 import { isEditableShortcutTarget } from '../../utils/commandPalette';
 import { ListView } from '../list/ListView';
+import { AgendaView } from '../agenda/AgendaView';
 
 export function AppShell() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -77,7 +78,7 @@ export function AppShell() {
             {error}
           </div>
         )}
-        {viewMode === 'brain' ? <BrainCanvas /> : <ListView />}
+        {viewMode === 'brain' ? <BrainCanvas /> : viewMode === 'list' ? <ListView /> : <AgendaView />}
         <BottomToolbar />
       </main>
       <RightDetailPanel />

@@ -18,7 +18,7 @@ import { createInitialItems, createInitialRelationships } from '../utils/seedDat
 
 export { createInitialItems } from '../utils/seedData';
 
-export type ViewMode = 'brain' | 'list';
+export type ViewMode = 'brain' | 'list' | 'agenda';
 
 interface ItemState {
   items: Record<string, Item>;

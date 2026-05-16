@@ -31,6 +31,7 @@ npm run test
 
 - Left sidebar with search, filters, categories, tags, and add item
 - Brain-shaped graph area with draggable nodes, zoom, pan, minimap, and curved relationship lines
+- Agenda view for overdue, today, this week, later, and undated work
 - Right detail panel for item editing
 - Markdown-style description preview for notes and tasks
 - Create, edit, delete items

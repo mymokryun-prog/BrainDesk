@@ -108,6 +108,13 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         run: () => setViewMode('list'),
       },
       {
+        id: 'show-agenda-view',
+        title: 'Show agenda view',
+        description: 'Review visible items by due date.',
+        keywords: ['calendar', 'due', 'date', 'today', 'week'],
+        run: () => setViewMode('agenda'),
+      },
+      {
         id: 'show-brain-view',
         title: 'Show brain view',
         description: 'Return to the brain-shaped canvas.',

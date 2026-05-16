@@ -87,6 +87,10 @@ describe('item store', () => {
     store.getState().setViewMode('list');
 
     expect(store.getState().viewMode).toBe('list');
+
+    store.getState().setViewMode('agenda');
+
+    expect(store.getState().viewMode).toBe('agenda');
   });
 
   it('enables focus mode in brain view', () => {
