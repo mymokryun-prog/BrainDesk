@@ -48,6 +48,8 @@ interface ItemState {
   deleteAttachment: (itemId: string, attachmentId: string) => void;
   toggleChecklistItem: (itemId: string, checklistItemId: string) => void;
   addChecklistItem: (itemId: string, label: string) => void;
+  updateChecklistItem: (itemId: string, checklistItemId: string, label: string) => void;
+  deleteChecklistItem: (itemId: string, checklistItemId: string) => void;
   replaceWorkspace: (items: Item[], relationships: Relationship[]) => void;
   loadPersistedWorkspace: () => Promise<void>;
 }
@@ -247,6 +249,24 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
             createdAt: nowIso(),
           },
         ],
+      });
+    },
+    updateChecklistItem: (itemId, checklistItemId, label) => {
+      const item = get().items[itemId];
+      if (!item) return;
+
+      get().updateItem(itemId, {
+        checklist: item.checklist.map((entry) =>
+          entry.id === checklistItemId ? { ...entry, label } : entry,
+        ),
+      });
+    },
+    deleteChecklistItem: (itemId, checklistItemId) => {
+      const item = get().items[itemId];
+      if (!item) return;
+
+      get().updateItem(itemId, {
+        checklist: item.checklist.filter((entry) => entry.id !== checklistItemId),
       });
     },
     replaceWorkspace: (items, relationships) => {

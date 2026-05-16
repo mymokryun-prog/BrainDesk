@@ -59,6 +59,26 @@ describe('item store', () => {
     expect(store.getState().items[item.id].attachments).toHaveLength(0);
   });
 
+  it('updates, completes, and deletes checklist items', () => {
+    const store = createItemStore({ seed: false, persist: false });
+    const item = store.createItem({ title: 'Checklist memo', category: 'Company', type: 'task' });
+
+    store.getState().addChecklistItem(item.id, 'Draft agenda');
+    const checklistItem = store.getState().items[item.id].checklist[0];
+
+    store.getState().updateChecklistItem(item.id, checklistItem.id, 'Send agenda');
+    store.getState().toggleChecklistItem(item.id, checklistItem.id);
+
+    expect(store.getState().items[item.id].checklist[0]).toMatchObject({
+      label: 'Send agenda',
+      completed: true,
+    });
+
+    store.getState().deleteChecklistItem(item.id, checklistItem.id);
+
+    expect(store.getState().items[item.id].checklist).toHaveLength(0);
+  });
+
   it('switches between brain and list view modes', () => {
     const store = createItemStore({ seed: false, persist: false });
 

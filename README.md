@@ -34,6 +34,7 @@ npm run test
 - Right detail panel for item editing
 - Markdown-style description preview for notes and tasks
 - Create, edit, delete items
+- Edit, complete, delete checklist items with a completion progress bar
 - Create relationships by dragging graph handles or using the detail panel
 - Persist items, positions, relationships, checklists, and attachments in IndexedDB
 - Attach files and images
