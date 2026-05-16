@@ -3,9 +3,10 @@ import { useState } from 'react';
 import { Button } from '../common/Button';
 import { useItemStore } from '../../store/itemStore';
 import { exportBackupZip, importBackupFile } from '../../utils/importExport';
+import { createBackupStatus, type ToolbarStatus } from '../../utils/toolbarStatus';
 
 export function BottomToolbar() {
-  const [importError, setImportError] = useState('');
+  const [toolbarStatus, setToolbarStatus] = useState<ToolbarStatus | undefined>();
   const itemsById = useItemStore((state) => state.items);
   const relationshipsById = useItemStore((state) => state.relationships);
   const viewMode = useItemStore((state) => state.viewMode);
@@ -26,9 +27,9 @@ export function BottomToolbar() {
       anchor.download = `neurotask-canvas-${new Date().toISOString().slice(0, 10)}.zip`;
       anchor.click();
       URL.revokeObjectURL(url);
-      setImportError('');
+      setToolbarStatus(createBackupStatus('export-success'));
     } catch (error) {
-      setImportError(error instanceof Error ? error.message : 'Could not export backup.');
+      setToolbarStatus(createBackupStatus('export-error', error));
     }
   }
 
@@ -36,17 +37,22 @@ export function BottomToolbar() {
     try {
       const backup = await importBackupFile(file);
       replaceWorkspace(backup.items, backup.relationships);
-      setImportError('');
+      setToolbarStatus(createBackupStatus('import-success'));
     } catch (error) {
-      setImportError(error instanceof Error ? error.message : 'Could not import backup.');
+      setToolbarStatus(createBackupStatus('import-error', error));
     }
   }
 
   return (
     <div className="absolute bottom-5 left-1/2 z-20 flex max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col items-center gap-2">
-      {importError && (
-        <div className="rounded-md border border-coral/30 bg-white px-3 py-2 text-xs font-medium text-coral shadow-panel">
-          {importError}
+      {toolbarStatus && (
+        <div
+          className={`rounded-md border bg-white px-3 py-2 text-xs font-medium shadow-panel ${
+            toolbarStatus.kind === 'success' ? 'border-fern/30 text-fern' : 'border-coral/30 text-coral'
+          }`}
+          role="status"
+        >
+          {toolbarStatus.message}
         </div>
       )}
       <div className="flex max-w-full items-center gap-2 overflow-x-auto rounded-lg border border-white/70 bg-white/88 p-2 shadow-panel backdrop-blur">
