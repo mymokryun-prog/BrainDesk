@@ -4,9 +4,11 @@ import { useItemStore } from '../../store/itemStore';
 import { exportBackup, importBackup } from '../../utils/importExport';
 
 export function BottomToolbar() {
-  const items = useItemStore((state) => Object.values(state.items));
-  const relationships = useItemStore((state) => Object.values(state.relationships));
+  const itemsById = useItemStore((state) => state.items);
+  const relationshipsById = useItemStore((state) => state.relationships);
   const replaceWorkspace = useItemStore((state) => state.replaceWorkspace);
+  const items = Object.values(itemsById);
+  const relationships = Object.values(relationshipsById);
 
   function handleExport() {
     const json = exportBackup(items, relationships);

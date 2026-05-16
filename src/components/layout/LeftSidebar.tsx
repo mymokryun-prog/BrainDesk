@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '../common/Button';
 import { categories, itemTypes, priorities, statuses, type Category } from '../../types/item';
@@ -9,8 +10,8 @@ export function LeftSidebar() {
   const setFilters = useItemStore((state) => state.setFilters);
   const createItem = useItemStore((state) => state.createItem);
   const selectItem = useItemStore((state) => state.selectItem);
-  const filteredItems = useItemStore((state) => getFilteredItems(state));
-  const tags = Array.from(new Set(Object.values(items).flatMap((item) => item.tags))).sort();
+  const filteredItems = useMemo(() => getFilteredItems({ items, filters }), [filters, items]);
+  const tags = useMemo(() => Array.from(new Set(Object.values(items).flatMap((item) => item.tags))).sort(), [items]);
 
   function handleCreate(category?: Category) {
     const item = createItem({

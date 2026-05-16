@@ -6,7 +6,7 @@ import { useItemStore } from '../../store/itemStore';
 
 export function RightDetailPanel() {
   const items = useItemStore((state) => state.items);
-  const relationships = useItemStore((state) => Object.values(state.relationships));
+  const relationshipsById = useItemStore((state) => state.relationships);
   const selectedItemId = useItemStore((state) => state.selectedItemId);
   const updateItem = useItemStore((state) => state.updateItem);
   const deleteItem = useItemStore((state) => state.deleteItem);
@@ -18,6 +18,7 @@ export function RightDetailPanel() {
   const selectedItem = selectedItemId ? items[selectedItemId] : undefined;
   const [newChecklistLabel, setNewChecklistLabel] = useState('');
   const [linkTargetId, setLinkTargetId] = useState('');
+  const relationships = useMemo(() => Object.values(relationshipsById), [relationshipsById]);
 
   const linkedRelationships = useMemo(
     () =>

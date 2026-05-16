@@ -31,13 +31,14 @@ export function BrainCanvas() {
 function BrainCanvasInner() {
   const flowRef = useRef<ReactFlowInstance | null>(null);
   const itemsById = useItemStore((state) => state.items);
-  const relationships = useItemStore((state) => Object.values(state.relationships));
+  const relationshipsById = useItemStore((state) => state.relationships);
   const selectedItemId = useItemStore((state) => state.selectedItemId);
   const filters = useItemStore((state) => state.filters);
   const selectItem = useItemStore((state) => state.selectItem);
   const updateItemPosition = useItemStore((state) => state.updateItemPosition);
   const createRelationship = useItemStore((state) => state.createRelationship);
 
+  const relationships = useMemo(() => Object.values(relationshipsById), [relationshipsById]);
   const visibleItems = useMemo(() => getFilteredItems({ items: itemsById, filters }), [filters, itemsById]);
   const visibleIds = useMemo(() => new Set(visibleItems.map((item) => item.id)), [visibleItems]);
 
