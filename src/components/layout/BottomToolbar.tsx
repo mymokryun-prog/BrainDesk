@@ -8,7 +8,9 @@ export function BottomToolbar() {
   const [importError, setImportError] = useState('');
   const itemsById = useItemStore((state) => state.items);
   const relationshipsById = useItemStore((state) => state.relationships);
+  const viewMode = useItemStore((state) => state.viewMode);
   const replaceWorkspace = useItemStore((state) => state.replaceWorkspace);
+  const setViewMode = useItemStore((state) => state.setViewMode);
   const items = Object.values(itemsById);
   const relationships = Object.values(relationshipsById);
 
@@ -47,8 +49,18 @@ export function BottomToolbar() {
           onClick={() => window.dispatchEvent(new Event('neurotask:fit'))}
         />
         <Button title="Focus mode" icon={<Focus size={16} />} />
-        <Button title="List view" icon={<List size={16} />} />
-        <Button title="Brain view" icon={<Braces size={16} />} />
+        <Button
+          title="List view"
+          icon={<List size={16} />}
+          variant={viewMode === 'list' ? 'primary' : 'secondary'}
+          onClick={() => setViewMode('list')}
+        />
+        <Button
+          title="Brain view"
+          icon={<Braces size={16} />}
+          variant={viewMode === 'brain' ? 'primary' : 'secondary'}
+          onClick={() => setViewMode('brain')}
+        />
         <Button title="Export data" icon={<Download size={16} />} onClick={handleExport} />
         <label>
           <input

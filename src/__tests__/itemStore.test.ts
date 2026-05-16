@@ -59,6 +59,16 @@ describe('item store', () => {
     expect(store.getState().items[item.id].attachments).toHaveLength(0);
   });
 
+  it('switches between brain and list view modes', () => {
+    const store = createItemStore({ seed: false, persist: false });
+
+    expect(store.getState().viewMode).toBe('brain');
+
+    store.getState().setViewMode('list');
+
+    expect(store.getState().viewMode).toBe('list');
+  });
+
   it('starts with useful sample nodes when seeded', () => {
     const items = createInitialItems();
 

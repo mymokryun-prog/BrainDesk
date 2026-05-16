@@ -18,11 +18,14 @@ import { createInitialItems, createInitialRelationships } from '../utils/seedDat
 
 export { createInitialItems } from '../utils/seedData';
 
+export type ViewMode = 'brain' | 'list';
+
 interface ItemState {
   items: Record<string, Item>;
   relationships: Record<string, Relationship>;
   selectedItemId?: string;
   filters: ItemFilters;
+  viewMode: ViewMode;
   isReady: boolean;
   error?: string;
   createItem: (input: ItemInput) => Item;
@@ -37,6 +40,7 @@ interface ItemState {
   ) => Relationship;
   deleteRelationship: (id: string) => void;
   setFilters: (filters: Partial<ItemFilters>) => void;
+  setViewMode: (viewMode: ViewMode) => void;
   addAttachment: (itemId: string, file: File | Blob, fileName?: string) => Attachment;
   deleteAttachment: (itemId: string, attachmentId: string) => void;
   toggleChecklistItem: (itemId: string, checklistItemId: string) => void;
@@ -77,6 +81,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
     relationships: toRecord(initialRelationships),
     selectedItemId: initialItems[0]?.id,
     filters: defaultFilters,
+    viewMode: 'brain',
     isReady: options.seed !== false,
     createItem: (input) => {
       const timestamp = nowIso();
@@ -173,6 +178,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
       persistCurrent(get, persistEnabled);
     },
     setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
+    setViewMode: (viewMode) => set({ viewMode }),
     addAttachment: (itemId, file, fileName) => {
       const item = get().items[itemId];
       if (!item) throw new Error('Select an item before attaching a file.');

@@ -18,6 +18,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const deleteItem = useItemStore((state) => state.deleteItem);
   const selectItem = useItemStore((state) => state.selectItem);
   const setFilters = useItemStore((state) => state.setFilters);
+  const setViewMode = useItemStore((state) => state.setViewMode);
 
   useEffect(() => {
     if (!open) return;
@@ -87,6 +88,20 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         run: () => window.dispatchEvent(new Event('neurotask:fit')),
       },
       {
+        id: 'show-list-view',
+        title: 'Show list view',
+        description: 'Review visible items in a table.',
+        keywords: ['table', 'items', 'rows'],
+        run: () => setViewMode('list'),
+      },
+      {
+        id: 'show-brain-view',
+        title: 'Show brain view',
+        description: 'Return to the brain-shaped canvas.',
+        keywords: ['canvas', 'graph', 'brain'],
+        run: () => setViewMode('brain'),
+      },
+      {
         id: 'top-priority',
         title: 'Show Top Priority',
         description: 'Filter the canvas to the top priority category.',
@@ -117,7 +132,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         },
       },
     ],
-    [createItem, deleteItem, filters.category, selectItem, selectedItemId, setFilters],
+    [createItem, deleteItem, filters.category, selectItem, selectedItemId, setFilters, setViewMode],
   );
 
   const filteredCommands = filterCommands(commands, query);

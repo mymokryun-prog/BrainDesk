@@ -6,6 +6,7 @@ import { BottomToolbar } from './BottomToolbar';
 import { useItemStore } from '../../store/itemStore';
 import { CommandPalette } from '../command/CommandPalette';
 import { isEditableShortcutTarget } from '../../utils/commandPalette';
+import { ListView } from '../list/ListView';
 
 export function AppShell() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -13,6 +14,7 @@ export function AppShell() {
   const isReady = useItemStore((state) => state.isReady);
   const error = useItemStore((state) => state.error);
   const filters = useItemStore((state) => state.filters);
+  const viewMode = useItemStore((state) => state.viewMode);
   const createItem = useItemStore((state) => state.createItem);
   const selectItem = useItemStore((state) => state.selectItem);
 
@@ -75,7 +77,7 @@ export function AppShell() {
             {error}
           </div>
         )}
-        <BrainCanvas />
+        {viewMode === 'brain' ? <BrainCanvas /> : <ListView />}
         <BottomToolbar />
       </main>
       <RightDetailPanel />
