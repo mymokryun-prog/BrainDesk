@@ -1,13 +1,14 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BottomToolbar } from '../components/layout/BottomToolbar';
-import { exportBackupZip } from '../utils/importExport';
+import { exportBackupZip, importBackupFile } from '../utils/importExport';
 
 vi.mock('../utils/importExport', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../utils/importExport')>();
   return {
     ...actual,
     exportBackupZip: vi.fn(),
+    importBackupFile: vi.fn(),
   };
 });
 
@@ -15,6 +16,7 @@ describe('BottomToolbar', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.mocked(exportBackupZip).mockResolvedValue(new Blob(['backup'], { type: 'application/zip' }));
+    vi.mocked(importBackupFile).mockResolvedValue({ items: [], relationships: [] });
     Object.defineProperty(URL, 'createObjectURL', {
       configurable: true,
       value: vi.fn(),
@@ -106,5 +108,20 @@ describe('BottomToolbar', () => {
     render(<BottomToolbar />);
 
     expect(screen.queryByText('Backup is 7 days old. Export a fresh copy soon.')).not.toBeInTheDocument();
+  });
+
+  it('cancels import when the replacement warning is declined', () => {
+    const { container } = render(<BottomToolbar />);
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    fireEvent.change(fileInput, {
+      target: {
+        files: [new File(['{}'], 'backup.json', { type: 'application/json' })],
+      },
+    });
+
+    expect(window.confirm).toHaveBeenCalledWith('Importing a backup will replace the current workspace. Continue?');
+    expect(importBackupFile).not.toHaveBeenCalled();
   });
 });

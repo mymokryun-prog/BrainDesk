@@ -79,6 +79,9 @@ export function BottomToolbar() {
   }
 
   async function handleImport(file: File) {
+    const shouldImport = window.confirm('Importing a backup will replace the current workspace. Continue?');
+    if (!shouldImport) return;
+
     try {
       const backup = await importBackupFile(file);
       replaceWorkspace(backup.items, backup.relationships);
