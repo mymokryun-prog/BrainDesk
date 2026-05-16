@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '../common/Button';
-import { categories, itemTypes, priorities, statuses, type Category } from '../../types/item';
+import { categories, itemTypes, priorities, statuses, type Category, type ItemType } from '../../types/item';
 import { getFilteredItems, useItemStore } from '../../store/itemStore';
+import { createQuickItemInput } from '../../utils/quickAdd';
 
 export function LeftSidebar() {
   const searchRef = useRef<HTMLInputElement>(null);
+  const quickTitleRef = useRef<HTMLInputElement>(null);
+  const [quickTitle, setQuickTitle] = useState('');
+  const [quickType, setQuickType] = useState<ItemType>('task');
   const filters = useItemStore((state) => state.filters);
   const items = useItemStore((state) => state.items);
   const setFilters = useItemStore((state) => state.setFilters);
@@ -21,6 +25,19 @@ export function LeftSidebar() {
       type: 'note',
     });
     selectItem(item.id);
+  }
+
+  function handleQuickCreate() {
+    const input = createQuickItemInput(quickTitle, filters.category, quickType);
+    if (!input) {
+      quickTitleRef.current?.focus();
+      return;
+    }
+
+    const item = createItem(input);
+    selectItem(item.id);
+    setQuickTitle('');
+    quickTitleRef.current?.focus();
   }
 
   useEffect(() => {
@@ -43,6 +60,31 @@ export function LeftSidebar() {
       <Button className="mt-5 w-full" icon={<Plus size={16} />} variant="primary" onClick={() => handleCreate()}>
         Add item
       </Button>
+
+      <section className="mt-3 rounded-lg border border-graphite/10 bg-mist/70 p-3">
+        <div className="flex gap-2">
+          <input
+            ref={quickTitleRef}
+            className="field-input min-w-0 flex-1"
+            value={quickTitle}
+            placeholder="Quick add"
+            onChange={(event) => setQuickTitle(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') handleQuickCreate();
+            }}
+          />
+          <Button icon={<Plus size={16} />} disabled={!quickTitle.trim()} onClick={handleQuickCreate} />
+        </div>
+        <select
+          className="mt-2 w-full rounded-md border border-graphite/10 bg-white px-3 py-2 text-sm outline-none focus:border-fern"
+          value={quickType}
+          onChange={(event) => setQuickType(event.target.value as ItemType)}
+        >
+          {itemTypes.map((type) => (
+            <option key={type}>{type}</option>
+          ))}
+        </select>
+      </section>
 
       <label className="mt-5 flex items-center gap-2 rounded-md border border-graphite/10 bg-mist px-3 py-2">
         <Search size={16} className="text-graphite/60" />
