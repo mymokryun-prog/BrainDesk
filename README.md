@@ -32,6 +32,7 @@ npm run test
 - Left sidebar with search, filters, categories, tags, and add item
 - Brain-shaped graph area with draggable nodes, zoom, pan, minimap, and curved relationship lines
 - Right detail panel for item editing
+- Markdown-style description preview for notes and tasks
 - Create, edit, delete items
 - Create relationships by dragging graph handles or using the detail panel
 - Persist items, positions, relationships, checklists, and attachments in IndexedDB
@@ -42,5 +43,7 @@ npm run test
 ## Notes
 
 JSON backup exports attachment metadata but not binary file contents. Full binary backup can be added later with a ZIP-based export without changing the core data model.
+
+Markdown preview supports a small safe subset: headings, paragraphs, bullets, quotes, and fenced code blocks.
 
 The app is intentionally local-first. There is no backend, login, sync, or paid API dependency in the MVP.

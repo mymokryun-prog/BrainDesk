@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Download, Link2, Paperclip, Plus, Trash2 } from 'lucide-react';
 import { Button } from '../common/Button';
+import { MarkdownPreview } from '../markdown/MarkdownPreview';
 import { categories, itemTypes, priorities, statuses, type Item } from '../../types/item';
 import { useItemStore } from '../../store/itemStore';
 
@@ -19,6 +20,7 @@ export function RightDetailPanel() {
   const selectedItem = selectedItemId ? items[selectedItemId] : undefined;
   const [newChecklistLabel, setNewChecklistLabel] = useState('');
   const [linkTargetId, setLinkTargetId] = useState('');
+  const [descriptionMode, setDescriptionMode] = useState<'edit' | 'preview'>('edit');
   const relationships = useMemo(() => Object.values(relationshipsById), [relationshipsById]);
 
   const linkedRelationships = useMemo(
@@ -92,13 +94,36 @@ export function RightDetailPanel() {
           />
         </Field>
 
-        <Field label="Description">
-          <textarea
-            className="field-input min-h-24 resize-none"
-            value={selectedItem.description}
-            onChange={(event) => updateSelected({ description: event.target.value })}
-          />
-        </Field>
+        <div>
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <span className="block text-xs font-medium text-graphite/65">Description</span>
+            <div className="flex rounded-md border border-graphite/10 bg-mist p-0.5">
+              {(['edit', 'preview'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  className={`rounded px-2 py-1 text-xs font-medium capitalize transition ${
+                    descriptionMode === mode ? 'bg-white text-ink shadow-sm' : 'text-graphite/65 hover:text-ink'
+                  }`}
+                  type="button"
+                  onClick={() => setDescriptionMode(mode)}
+                >
+                  {mode}
+                </button>
+              ))}
+            </div>
+          </div>
+          {descriptionMode === 'edit' ? (
+            <textarea
+              className="field-input min-h-28 resize-none"
+              value={selectedItem.description}
+              onChange={(event) => updateSelected({ description: event.target.value })}
+            />
+          ) : (
+            <div className="min-h-28 rounded-md border border-graphite/10 bg-white px-3 py-2">
+              <MarkdownPreview value={selectedItem.description} />
+            </div>
+          )}
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Type">
