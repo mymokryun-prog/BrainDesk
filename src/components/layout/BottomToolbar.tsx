@@ -1,5 +1,5 @@
-import { Braces, CalendarDays, Command, Download, Focus, List, Network, Scan, Upload } from 'lucide-react';
-import { useState } from 'react';
+import { Braces, CalendarDays, Command, Download, Focus, List, Network, Scan, Upload, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Button } from '../common/Button';
 import { useItemStore } from '../../store/itemStore';
 import { exportBackupZip, importBackupFile } from '../../utils/importExport';
@@ -17,6 +17,14 @@ export function BottomToolbar() {
   const arrangeItems = useItemStore((state) => state.arrangeItems);
   const items = Object.values(itemsById);
   const relationships = Object.values(relationshipsById);
+
+  useEffect(() => {
+    if (!toolbarStatus) return;
+
+    const timeoutId = window.setTimeout(() => setToolbarStatus(undefined), 4500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toolbarStatus]);
 
   async function handleExport() {
     try {
@@ -47,12 +55,20 @@ export function BottomToolbar() {
     <div className="absolute bottom-5 left-1/2 z-20 flex max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col items-center gap-2">
       {toolbarStatus && (
         <div
-          className={`rounded-md border bg-white px-3 py-2 text-xs font-medium shadow-panel ${
+          className={`flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-xs font-medium shadow-panel ${
             toolbarStatus.kind === 'success' ? 'border-fern/30 text-fern' : 'border-coral/30 text-coral'
           }`}
           role="status"
         >
-          {toolbarStatus.message}
+          <span>{toolbarStatus.message}</span>
+          <button
+            aria-label="Dismiss status"
+            className="rounded p-0.5 text-current opacity-70 transition hover:bg-graphite/5 hover:opacity-100"
+            type="button"
+            onClick={() => setToolbarStatus(undefined)}
+          >
+            <X size={14} aria-hidden="true" />
+          </button>
         </div>
       )}
       <div className="flex max-w-full items-center gap-2 overflow-x-auto rounded-lg border border-white/70 bg-white/88 p-2 shadow-panel backdrop-blur">
