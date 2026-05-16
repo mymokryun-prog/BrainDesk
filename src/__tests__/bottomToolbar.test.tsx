@@ -87,4 +87,24 @@ describe('BottomToolbar', () => {
     expect(screen.getByText('Last backup: 2026-05-17 01:23')).toBeInTheDocument();
     expect(localStorage.getItem('neurotask:lastBackupAt')).toBe('2026-05-17T01:23:00.000Z');
   });
+
+  it('shows a quiet warning when the last backup is seven days old', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-17T00:00:00.000Z'));
+    localStorage.setItem('neurotask:lastBackupAt', '2026-05-10T00:00:00.000Z');
+
+    render(<BottomToolbar />);
+
+    expect(screen.getByText('Backup is 7 days old. Export a fresh copy soon.')).toBeInTheDocument();
+  });
+
+  it('does not show the stale backup warning for recent backups', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-17T00:00:00.000Z'));
+    localStorage.setItem('neurotask:lastBackupAt', '2026-05-11T00:00:00.000Z');
+
+    render(<BottomToolbar />);
+
+    expect(screen.queryByText('Backup is 7 days old. Export a fresh copy soon.')).not.toBeInTheDocument();
+  });
 });

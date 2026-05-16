@@ -6,6 +6,8 @@ import { exportBackupZip, importBackupFile } from '../../utils/importExport';
 import { createBackupStatus, type ToolbarStatus } from '../../utils/toolbarStatus';
 
 const LAST_BACKUP_STORAGE_KEY = 'neurotask:lastBackupAt';
+const STALE_BACKUP_DAYS = 7;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function readLastBackupAt(): string | undefined {
   try {
@@ -17,6 +19,13 @@ function readLastBackupAt(): string | undefined {
 
 function formatBackupTime(isoDate: string): string {
   return isoDate.slice(0, 16).replace('T', ' ');
+}
+
+function getBackupAgeDays(isoDate: string): number {
+  const backupTime = new Date(isoDate).getTime();
+  if (Number.isNaN(backupTime)) return 0;
+
+  return Math.floor((Date.now() - backupTime) / DAY_MS);
 }
 
 export function BottomToolbar() {
@@ -32,6 +41,8 @@ export function BottomToolbar() {
   const arrangeItems = useItemStore((state) => state.arrangeItems);
   const items = Object.values(itemsById);
   const relationships = Object.values(relationshipsById);
+  const backupAgeDays = lastBackupAt ? getBackupAgeDays(lastBackupAt) : 0;
+  const isBackupStale = backupAgeDays >= STALE_BACKUP_DAYS;
 
   useEffect(() => {
     if (!toolbarStatus) return;
@@ -99,9 +110,16 @@ export function BottomToolbar() {
         </div>
       )}
       {lastBackupAt && (
-        <div className="rounded-md border border-graphite/10 bg-white/80 px-3 py-1.5 text-[11px] font-medium text-graphite shadow-soft backdrop-blur">
-          Last backup: {formatBackupTime(lastBackupAt)}
-        </div>
+        <>
+          <div className="rounded-md border border-graphite/10 bg-white/80 px-3 py-1.5 text-[11px] font-medium text-graphite shadow-soft backdrop-blur">
+            Last backup: {formatBackupTime(lastBackupAt)}
+          </div>
+          {isBackupStale && (
+            <div className="rounded-md border border-gold/30 bg-gold/10 px-3 py-1.5 text-[11px] font-medium text-graphite shadow-soft backdrop-blur">
+              Backup is {backupAgeDays} days old. Export a fresh copy soon.
+            </div>
+          )}
+        </>
       )}
       <div className="flex max-w-full items-center gap-2 overflow-x-auto rounded-lg border border-white/70 bg-white/88 p-2 shadow-panel backdrop-blur">
         <Button
