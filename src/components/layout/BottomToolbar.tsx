@@ -65,7 +65,11 @@ export function BottomToolbar() {
             <Upload size={16} />
           </span>
         </label>
-        <Button title="Command palette" icon={<Command size={16} />} />
+        <Button
+          title="Command palette"
+          icon={<Command size={16} />}
+          onClick={() => window.dispatchEvent(new Event('neurotask:open-command-palette'))}
+        />
       </div>
     </div>
   );

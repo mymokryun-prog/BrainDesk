@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '../common/Button';
 import { categories, itemTypes, priorities, statuses, type Category } from '../../types/item';
 import { getFilteredItems, useItemStore } from '../../store/itemStore';
 
 export function LeftSidebar() {
+  const searchRef = useRef<HTMLInputElement>(null);
   const filters = useItemStore((state) => state.filters);
   const items = useItemStore((state) => state.items);
   const setFilters = useItemStore((state) => state.setFilters);
@@ -22,6 +23,16 @@ export function LeftSidebar() {
     selectItem(item.id);
   }
 
+  useEffect(() => {
+    function focusSearch() {
+      searchRef.current?.focus();
+      searchRef.current?.select();
+    }
+
+    window.addEventListener('neurotask:focus-search', focusSearch);
+    return () => window.removeEventListener('neurotask:focus-search', focusSearch);
+  }, []);
+
   return (
     <aside className="flex h-full w-[292px] flex-col bg-white/90 px-4 py-5 shadow-panel">
       <div>
@@ -36,6 +47,7 @@ export function LeftSidebar() {
       <label className="mt-5 flex items-center gap-2 rounded-md border border-graphite/10 bg-mist px-3 py-2">
         <Search size={16} className="text-graphite/60" />
         <input
+          ref={searchRef}
           className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-graphite/45"
           value={filters.query}
           placeholder="Search notes, tags, tasks"
