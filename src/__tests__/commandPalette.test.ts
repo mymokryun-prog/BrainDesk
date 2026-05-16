@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { filterCommands, isEditableShortcutTarget, type CommandAction } from '../utils/commandPalette';
+import {
+  createItemInputFromCommandQuery,
+  filterCommands,
+  isEditableShortcutTarget,
+  type CommandAction,
+} from '../utils/commandPalette';
 
 const commands: CommandAction[] = [
   {
@@ -29,5 +34,19 @@ describe('command palette utilities', () => {
     expect(isEditableShortcutTarget(document.createElement('input'))).toBe(true);
     expect(isEditableShortcutTarget(document.createElement('textarea'))).toBe(true);
     expect(isEditableShortcutTarget(document.createElement('button'))).toBe(false);
+  });
+
+  it('creates item input from note and task command queries', () => {
+    expect(createItemInputFromCommandQuery('task 계약서 확인', 'Company')).toMatchObject({
+      title: '계약서 확인',
+      type: 'task',
+      category: 'Company',
+    });
+    expect(createItemInputFromCommandQuery('note meeting memo', 'All')).toMatchObject({
+      title: 'meeting memo',
+      type: 'note',
+      category: 'Personal',
+    });
+    expect(createItemInputFromCommandQuery('task', 'Company')).toBeUndefined();
   });
 });

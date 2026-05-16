@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Command, Search } from 'lucide-react';
 import { Button } from '../common/Button';
-import { filterCommands, type CommandAction } from '../../utils/commandPalette';
+import {
+  createItemInputFromCommandQuery,
+  filterCommands,
+  type CommandAction,
+} from '../../utils/commandPalette';
 import { useItemStore } from '../../store/itemStore';
 
 interface CommandPaletteProps {
@@ -155,7 +159,27 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     [createItem, deleteItem, filters.category, isFocusMode, selectItem, selectedItemId, setFilters, setFocusMode, setViewMode],
   );
 
-  const filteredCommands = filterCommands(commands, query);
+  const dynamicCreateCommand = useMemo<CommandAction | undefined>(() => {
+    const input = createItemInputFromCommandQuery(query, filters.category);
+    if (!input) return undefined;
+    const itemType = input.type ?? 'note';
+
+    return {
+      id: 'dynamic-create-item',
+      title: `Create ${itemType}: ${input.title}`,
+      description: `Add to ${input.category}`,
+      keywords: ['create', 'quick', itemType],
+      run: () => {
+        const item = createItem(input);
+        selectItem(item.id);
+      },
+    };
+  }, [createItem, filters.category, query, selectItem]);
+
+  const filteredCommands = useMemo(() => {
+    const filtered = filterCommands(commands, query);
+    return dynamicCreateCommand ? [dynamicCreateCommand, ...filtered] : filtered;
+  }, [commands, dynamicCreateCommand, query]);
 
   function runCommand(command: CommandAction) {
     command.run();

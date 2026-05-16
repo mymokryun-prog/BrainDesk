@@ -1,3 +1,6 @@
+import type { ItemFilters, ItemInput, ItemType } from '../types/item';
+import { createQuickItemInput } from './quickAdd';
+
 export interface CommandAction {
   id: string;
   title: string;
@@ -22,4 +25,15 @@ export function isEditableShortcutTarget(target: EventTarget | null): boolean {
 
   const tagName = target.tagName.toLowerCase();
   return tagName === 'input' || tagName === 'textarea' || tagName === 'select' || target.isContentEditable === true;
+}
+
+export function createItemInputFromCommandQuery(
+  query: string,
+  activeCategory: ItemFilters['category'],
+): ItemInput | undefined {
+  const match = query.trim().match(/^(note|task)\s+(.+)$/i);
+  if (!match) return undefined;
+
+  const [, type, title] = match;
+  return createQuickItemInput(title, activeCategory, type.toLowerCase() as ItemType);
 }
