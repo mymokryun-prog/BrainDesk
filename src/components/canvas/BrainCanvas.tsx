@@ -15,7 +15,6 @@ import {
 } from '@xyflow/react';
 import type { Item } from '../../types/item';
 import { getFilteredItems, useItemStore } from '../../store/itemStore';
-import { BrainShapeBackdrop } from './BrainShapeBackdrop';
 import { NeuroNode } from './NeuroNode';
 import { getFocusedItemIds } from '../../utils/focusMode';
 
@@ -73,8 +72,9 @@ function BrainCanvasInner() {
           type: 'smoothstep',
           animated: relationship.strength >= 4,
           style: {
-            stroke: '#6c9487',
-            strokeWidth: Math.max(1, relationship.strength),
+            stroke: '#8f949b',
+            strokeOpacity: 0.52,
+            strokeWidth: Math.max(0.75, relationship.strength * 0.55),
           },
         })),
     [relationships, visibleIds],
@@ -121,10 +121,9 @@ function BrainCanvasInner() {
   }
 
   return (
-    <div className="relative h-full overflow-hidden bg-[#edf2ef]">
-      <BrainShapeBackdrop />
+    <div className="relative h-full overflow-hidden bg-[#101214]">
       {isFocusMode && selectedItemId && (
-        <div className="absolute left-1/2 top-5 z-20 -translate-x-1/2 rounded-md border border-brass/25 bg-white/88 px-4 py-2 text-sm font-semibold text-graphite shadow-panel backdrop-blur">
+        <div className="absolute left-1/2 top-5 z-20 -translate-x-1/2 rounded-md border border-white/10 bg-[#1b1d20]/90 px-4 py-2 text-sm font-semibold text-white/80 shadow-panel backdrop-blur">
           Focus mode: selected item and direct links
         </div>
       )}
@@ -145,14 +144,14 @@ function BrainCanvasInner() {
         maxZoom={2.2}
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="#cfdad4" gap={28} size={1} />
+        <Background color="#2d3136" gap={32} size={1} />
         <MiniMap
           pannable
           zoomable
-          className="!bottom-20 !right-5 !rounded-lg !border !border-white/70 !bg-white/80 !shadow-panel"
+          className="!bottom-20 !right-5 !rounded-lg !border !border-white/10 !bg-[#17191c]/90 !shadow-panel"
           nodeColor={(node) => categoryColor((node.data.item as Item).category)}
         />
-        <Controls className="!bottom-20 !left-5 !rounded-lg !border !border-white/70 !bg-white/85 !shadow-panel" />
+        <Controls className="!bottom-20 !left-5 !rounded-lg !border !border-white/10 !bg-[#17191c]/90 !shadow-panel" />
       </ReactFlow>
     </div>
   );
