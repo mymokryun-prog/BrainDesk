@@ -4,6 +4,7 @@ import { Button } from '../common/Button';
 import { MarkdownPreview } from '../markdown/MarkdownPreview';
 import { categories, itemTypes, priorities, statuses, type Item } from '../../types/item';
 import { useItemStore } from '../../store/itemStore';
+import { suggestRelationships } from '../../utils/relationshipSuggestions';
 
 export function RightDetailPanel() {
   const items = useItemStore((state) => state.items);
@@ -39,6 +40,10 @@ export function RightDetailPanel() {
           )
         : [],
     [relationships, selectedItem],
+  );
+  const relationshipSuggestions = useMemo(
+    () => (selectedItem ? suggestRelationships(selectedItem, Object.values(items), relationships) : []),
+    [items, relationships, selectedItem],
   );
 
   useEffect(() => {
@@ -250,6 +255,38 @@ export function RightDetailPanel() {
               );
             })}
           </div>
+          {relationshipSuggestions.length > 0 && (
+            <div className="mt-4 border-t border-graphite/10 pt-3">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-graphite/55">
+                Suggested links
+              </div>
+              <div className="space-y-2">
+                {relationshipSuggestions.map((suggestion) => (
+                  <div
+                    key={suggestion.item.id}
+                    className="flex items-center justify-between gap-2 rounded-md border border-teal/15 bg-skyglass/35 px-3 py-2 text-sm"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">{suggestion.item.title}</span>
+                      <span className="block truncate text-xs text-graphite/60">{suggestion.reason}</span>
+                    </span>
+                    <button
+                      className="rounded-md p-1 text-teal hover:bg-white"
+                      title="Create suggested relationship"
+                      onClick={() =>
+                        createRelationship(selectedItem.id, suggestion.item.id, {
+                          label: 'suggested',
+                          strength: Math.min(5, Math.max(1, suggestion.score)),
+                        })
+                      }
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="rounded-lg border border-graphite/10 p-3">

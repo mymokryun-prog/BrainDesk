@@ -37,6 +37,7 @@ npm run test
 - Create, edit, delete items
 - Edit, complete, delete checklist items with a completion progress bar
 - Create relationships by dragging graph handles or using the detail panel
+- Suggested relationships based on shared tags, keywords, and category
 - Persist items, positions, relationships, checklists, and attachments in IndexedDB
 - Attach files and images
 - Paste screenshots/images into the selected item
