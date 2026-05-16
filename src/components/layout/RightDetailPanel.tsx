@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Download, Link2, Paperclip, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Trash2 } from 'lucide-react';
 import { Button } from '../common/Button';
 import { MarkdownPreview } from '../markdown/MarkdownPreview';
+import { AttachmentsSection } from '../detail/AttachmentsSection';
+import { ChecklistSection } from '../detail/ChecklistSection';
+import { LinkedItemsSection } from '../detail/LinkedItemsSection';
 import { categories, itemTypes, priorities, statuses, type Item } from '../../types/item';
 import { useItemStore } from '../../store/itemStore';
-import { suggestRelationships } from '../../utils/relationshipSuggestions';
 
 export function RightDetailPanel() {
   const items = useItemStore((state) => state.items);
@@ -21,30 +23,8 @@ export function RightDetailPanel() {
   const createRelationship = useItemStore((state) => state.createRelationship);
   const deleteRelationship = useItemStore((state) => state.deleteRelationship);
   const selectedItem = selectedItemId ? items[selectedItemId] : undefined;
-  const [newChecklistLabel, setNewChecklistLabel] = useState('');
-  const [linkTargetId, setLinkTargetId] = useState('');
   const [descriptionMode, setDescriptionMode] = useState<'edit' | 'preview'>('edit');
   const relationships = useMemo(() => Object.values(relationshipsById), [relationshipsById]);
-  const completedChecklistCount = selectedItem?.checklist.filter((entry) => entry.completed).length ?? 0;
-  const checklistProgress =
-    selectedItem && selectedItem.checklist.length > 0
-      ? Math.round((completedChecklistCount / selectedItem.checklist.length) * 100)
-      : 0;
-
-  const linkedRelationships = useMemo(
-    () =>
-      selectedItem
-        ? relationships.filter(
-            (relationship) =>
-              relationship.sourceItemId === selectedItem.id || relationship.targetItemId === selectedItem.id,
-          )
-        : [],
-    [relationships, selectedItem],
-  );
-  const relationshipSuggestions = useMemo(
-    () => (selectedItem ? suggestRelationships(selectedItem, Object.values(items), relationships) : []),
-    [items, relationships, selectedItem],
-  );
 
   useEffect(() => {
     function handlePaste(event: ClipboardEvent) {
@@ -71,15 +51,6 @@ export function RightDetailPanel() {
 
   function updateSelected(updates: Partial<Item>) {
     if (selectedItem) updateItem(selectedItem.id, updates);
-  }
-
-  function downloadAttachment(attachment: Item['attachments'][number]) {
-    const url = URL.createObjectURL(attachment.blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = attachment.fileName;
-    anchor.click();
-    URL.revokeObjectURL(url);
   }
 
   return (
@@ -208,207 +179,27 @@ export function RightDetailPanel() {
           />
         </Field>
 
-        <section className="rounded-lg border border-graphite/10 p-3">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Linked items</h3>
-            <Link2 size={16} className="text-graphite/55" />
-          </div>
-          <div className="flex gap-2">
-            <select
-              className="field-input min-w-0 flex-1"
-              value={linkTargetId}
-              onChange={(event) => setLinkTargetId(event.target.value)}
-            >
-              <option value="">Choose item</option>
-              {Object.values(items)
-                .filter((item) => item.id !== selectedItem.id)
-                .map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.title}
-                  </option>
-                ))}
-            </select>
-            <Button
-              icon={<Plus size={16} />}
-              disabled={!linkTargetId}
-              onClick={() => {
-                if (!linkTargetId) return;
-                createRelationship(selectedItem.id, linkTargetId, { label: 'related', strength: 2 });
-                setLinkTargetId('');
-              }}
-            />
-          </div>
-          <div className="mt-3 space-y-2">
-            {linkedRelationships.map((relationship) => {
-              const otherId =
-                relationship.sourceItemId === selectedItem.id ? relationship.targetItemId : relationship.sourceItemId;
-              return (
-                <div
-                  key={relationship.id}
-                  className="flex items-center justify-between gap-2 rounded-md bg-mist px-3 py-2 text-sm"
-                >
-                  <span className="truncate">{items[otherId]?.title ?? 'Missing item'}</span>
-                  <button className="text-coral" onClick={() => deleteRelationship(relationship.id)}>
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-          {relationshipSuggestions.length > 0 && (
-            <div className="mt-4 border-t border-graphite/10 pt-3">
-              <div className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-graphite/55">
-                Suggested links
-              </div>
-              <div className="space-y-2">
-                {relationshipSuggestions.map((suggestion) => (
-                  <div
-                    key={suggestion.item.id}
-                    className="flex items-center justify-between gap-2 rounded-md border border-teal/15 bg-skyglass/35 px-3 py-2 text-sm"
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate font-medium">{suggestion.item.title}</span>
-                      <span className="block truncate text-xs text-graphite/60">{suggestion.reason}</span>
-                    </span>
-                    <button
-                      className="rounded-md p-1 text-teal hover:bg-white"
-                      title="Create suggested relationship"
-                      onClick={() =>
-                        createRelationship(selectedItem.id, suggestion.item.id, {
-                          label: 'suggested',
-                          strength: Math.min(5, Math.max(1, suggestion.score)),
-                        })
-                      }
-                    >
-                      <Plus size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </section>
+        <LinkedItemsSection
+          items={items}
+          relationships={relationships}
+          selectedItem={selectedItem}
+          createRelationship={createRelationship}
+          deleteRelationship={deleteRelationship}
+        />
 
-        <section className="rounded-lg border border-graphite/10 p-3">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Attachments</h3>
-            <Paperclip size={16} className="text-graphite/55" />
-          </div>
-          <label className="block">
-            <input
-              className="hidden"
-              type="file"
-              multiple
-              onChange={(event) => {
-                Array.from(event.target.files ?? []).forEach((file) => addAttachment(selectedItem.id, file));
-                event.currentTarget.value = '';
-              }}
-            />
-            <span className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-md border border-graphite/15 bg-white px-3 py-2 text-sm font-medium text-ink transition hover:bg-mist">
-              <Paperclip size={16} />
-              Attach file
-            </span>
-          </label>
-          <div className="mt-3 space-y-2">
-            {selectedItem.attachments.map((attachment) => (
-              <div key={attachment.id} className="rounded-md bg-mist p-2 text-sm">
-                {attachment.previewUrl && (
-                  <img
-                    className="mb-2 max-h-32 w-full rounded-md object-cover"
-                    src={attachment.previewUrl}
-                    alt={attachment.fileName}
-                  />
-                )}
-                <div className="truncate font-medium">{attachment.fileName}</div>
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <div className="text-xs text-graphite/60">{Math.ceil(attachment.fileSize / 1024)} KB</div>
-                  <div className="flex gap-1">
-                    <button
-                      className="rounded-md p-1 text-graphite/65 hover:bg-white"
-                      title="Download attachment"
-                      onClick={() => downloadAttachment(attachment)}
-                    >
-                      <Download size={14} />
-                    </button>
-                    <button
-                      className="rounded-md p-1 text-coral hover:bg-white"
-                      title="Delete attachment"
-                      onClick={() => deleteAttachment(selectedItem.id, attachment.id)}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <AttachmentsSection
+          selectedItem={selectedItem}
+          addAttachment={addAttachment}
+          deleteAttachment={deleteAttachment}
+        />
 
-        <section className="rounded-lg border border-graphite/10 p-3">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="text-sm font-semibold">Checklist</h3>
-            <span className="text-xs text-graphite/60">
-              {completedChecklistCount}/{selectedItem.checklist.length} done
-            </span>
-          </div>
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-mist">
-            <div className="h-full bg-teal transition-all" style={{ width: `${checklistProgress}%` }} />
-          </div>
-          <div className="mt-3 flex gap-2">
-            <input
-              className="field-input min-w-0 flex-1"
-              value={newChecklistLabel}
-              placeholder="Add checklist item"
-              onChange={(event) => setNewChecklistLabel(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  addChecklistItem(selectedItem.id, newChecklistLabel);
-                  setNewChecklistLabel('');
-                }
-              }}
-            />
-            <Button
-              icon={<Plus size={16} />}
-              onClick={() => {
-                addChecklistItem(selectedItem.id, newChecklistLabel);
-                setNewChecklistLabel('');
-              }}
-            />
-          </div>
-          <div className="mt-3 space-y-2">
-            {selectedItem.checklist.map((entry) => (
-              <div key={entry.id} className="flex items-center gap-2 rounded-md bg-mist px-3 py-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={entry.completed}
-                  onChange={() => toggleChecklistItem(selectedItem.id, entry.id)}
-                />
-                <input
-                  className={`min-w-0 flex-1 bg-transparent outline-none ${
-                    entry.completed ? 'text-graphite/50 line-through' : ''
-                  }`}
-                  value={entry.label}
-                  onChange={(event) => updateChecklistItem(selectedItem.id, entry.id, event.target.value)}
-                  onBlur={(event) => {
-                    const trimmed = event.currentTarget.value.trim();
-                    if (trimmed) {
-                      updateChecklistItem(selectedItem.id, entry.id, trimmed);
-                    } else {
-                      deleteChecklistItem(selectedItem.id, entry.id);
-                    }
-                  }}
-                />
-                <button
-                  className="rounded-md p-1 text-coral hover:bg-white"
-                  title="Delete checklist item"
-                  onClick={() => deleteChecklistItem(selectedItem.id, entry.id)}
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
+        <ChecklistSection
+          selectedItem={selectedItem}
+          addChecklistItem={addChecklistItem}
+          toggleChecklistItem={toggleChecklistItem}
+          updateChecklistItem={updateChecklistItem}
+          deleteChecklistItem={deleteChecklistItem}
+        />
       </div>
 
       <div className="mt-4 border-t border-graphite/10 pt-4 text-xs text-graphite/55">
@@ -421,7 +212,7 @@ export function RightDetailPanel() {
 
 interface FieldProps {
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 function Field({ label, children }: FieldProps) {
