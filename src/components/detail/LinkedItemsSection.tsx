@@ -36,6 +36,19 @@ export function LinkedItemsSection({
     () => suggestRelationships(selectedItem, Object.values(items), relationships),
     [items, relationships, selectedItem],
   );
+  const linkedItemIds = useMemo(
+    () =>
+      new Set(
+        linkedRelationships.map((relationship) =>
+          relationship.sourceItemId === selectedItem.id ? relationship.targetItemId : relationship.sourceItemId,
+        ),
+      ),
+    [linkedRelationships, selectedItem.id],
+  );
+  const linkOptions = useMemo(
+    () => Object.values(items).filter((item) => item.id !== selectedItem.id && !linkedItemIds.has(item.id)),
+    [items, linkedItemIds, selectedItem.id],
+  );
 
   return (
     <section className="rounded-lg border border-graphite/10 p-3">
@@ -50,13 +63,11 @@ export function LinkedItemsSection({
           onChange={(event) => setLinkTargetId(event.target.value)}
         >
           <option value="">Choose item</option>
-          {Object.values(items)
-            .filter((item) => item.id !== selectedItem.id)
-            .map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.title}
-              </option>
-            ))}
+          {linkOptions.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.title}
+            </option>
+          ))}
         </select>
         <Button
           icon={<Plus size={16} />}
@@ -81,6 +92,9 @@ export function LinkedItemsSection({
             </div>
           );
         })}
+        {linkedRelationships.length === 0 && (
+          <p className="rounded-md bg-mist px-3 py-2 text-sm text-graphite/60">No linked items yet.</p>
+        )}
       </div>
       {relationshipSuggestions.length > 0 && (
         <div className="mt-4 border-t border-graphite/10 pt-3">

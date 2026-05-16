@@ -40,6 +40,18 @@ export function createRelationshipRecord(
   };
 }
 
+export function findRelationshipBetween(
+  relationships: Record<string, Relationship>,
+  sourceItemId: string,
+  targetItemId: string,
+): Relationship | undefined {
+  return Object.values(relationships).find(
+    (relationship) =>
+      (relationship.sourceItemId === sourceItemId && relationship.targetItemId === targetItemId) ||
+      (relationship.sourceItemId === targetItemId && relationship.targetItemId === sourceItemId),
+  );
+}
+
 export function removeRelationshipsForItem(
   relationships: Record<string, Relationship>,
   itemId: string,

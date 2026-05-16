@@ -20,6 +20,7 @@ import {
   createItemFromInput,
   createRelationshipRecord,
   deleteChecklistEntry,
+  findRelationshipBetween,
   removeRelationshipsForItem,
   restoreAttachmentPreviews,
   revokeAttachmentPreviewUrl,
@@ -150,6 +151,9 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
       if (!get().items[sourceItemId] || !get().items[targetItemId] || sourceItemId === targetItemId) {
         throw new Error('Relationships require two different existing items.');
       }
+
+      const existingRelationship = findRelationshipBetween(get().relationships, sourceItemId, targetItemId);
+      if (existingRelationship) return existingRelationship;
 
       const relationship = createRelationshipRecord(sourceItemId, targetItemId, input);
 

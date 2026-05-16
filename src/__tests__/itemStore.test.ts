@@ -47,6 +47,19 @@ describe('item store', () => {
     });
   });
 
+  it('does not duplicate an existing relationship between the same two items', () => {
+    const store = createItemStore({ seed: false, persist: false });
+    const source = store.createItem({ title: 'Risk', category: 'Top Priority', type: 'risk' });
+    const target = store.createItem({ title: 'Decision', category: 'Company', type: 'decision' });
+
+    const firstRelationship = store.createRelationship(source.id, target.id, { label: 'drives' });
+    const secondRelationship = store.createRelationship(target.id, source.id, { label: 'duplicate' });
+
+    expect(secondRelationship.id).toBe(firstRelationship.id);
+    expect(Object.values(store.getState().relationships)).toHaveLength(1);
+    expect(store.getState().relationships[firstRelationship.id].label).toBe('drives');
+  });
+
   it('adds and deletes attachments on an item', () => {
     const store = createItemStore({ seed: false, persist: false });
     const item = store.createItem({ title: 'Screenshot memo', category: 'Personal', type: 'screenshot' });
