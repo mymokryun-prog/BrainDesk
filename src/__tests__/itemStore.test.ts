@@ -59,6 +59,36 @@ describe('item store', () => {
     expect(store.getState().items[item.id].attachments).toHaveLength(0);
   });
 
+  it('normalizes invalid imported attachment blobs when replacing the workspace', () => {
+    const store = createItemStore({ seed: false, persist: false });
+    const item = store.createItem({ title: 'Imported legacy item', category: 'Personal', type: 'image' });
+
+    store.getState().replaceWorkspace(
+      [
+        {
+          ...item,
+          attachments: [
+            {
+              id: 'legacy-att',
+              itemId: item.id,
+              fileName: 'legacy.png',
+              fileType: 'image/png',
+              fileSize: 100,
+              blob: {} as Blob,
+              previewUrl: 'blob:legacy',
+              createdAt: '2026-05-15T00:00:00.000Z',
+            },
+          ],
+        },
+      ],
+      [],
+    );
+
+    const attachment = store.getState().items[item.id].attachments[0];
+    expect(attachment.blob).toBeInstanceOf(Blob);
+    expect(attachment.previewUrl).toBeUndefined();
+  });
+
   it('updates, completes, and deletes checklist items', () => {
     const store = createItemStore({ seed: false, persist: false });
     const item = store.createItem({ title: 'Checklist memo', category: 'Company', type: 'task' });

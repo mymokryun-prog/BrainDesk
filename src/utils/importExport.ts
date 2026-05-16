@@ -86,8 +86,19 @@ export function importBackup(json: string): Pick<BackupPayload, 'items' | 'relat
   }
 
   return {
-    items: parsed.items,
+    items: parsed.items.map(normalizeImportedItem),
     relationships: parsed.relationships,
+  };
+}
+
+function normalizeImportedItem(item: Item): Item {
+  return {
+    ...item,
+    attachments: item.attachments.map((attachment) => ({
+      ...attachment,
+      blob: isBlobLike(attachment.blob) ? attachment.blob : new Blob([], { type: attachment.fileType }),
+      previewUrl: undefined,
+    })),
   };
 }
 
@@ -137,6 +148,16 @@ function isRelationshipLike(value: unknown): value is Relationship {
     typeof relationship.label === 'string' &&
     typeof relationship.strength === 'number' &&
     typeof relationship.createdAt === 'string'
+  );
+}
+
+function isBlobLike(value: unknown): value is Blob {
+  return (
+    value instanceof Blob ||
+    (typeof value === 'object' &&
+      value !== null &&
+      typeof (value as Blob).size === 'number' &&
+      typeof (value as Blob).type === 'string')
   );
 }
 

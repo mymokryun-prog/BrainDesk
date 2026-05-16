@@ -40,6 +40,44 @@ describe('import and export backup', () => {
     expect(() => importBackup('{"items": "nope"}')).toThrow(/Invalid backup/i);
   });
 
+  it('normalizes legacy JSON attachment placeholders to empty blobs', () => {
+    const attachmentBlob = new Blob(['legacy image'], { type: 'image/png' });
+    const item: Item = {
+      id: 'item-json',
+      title: 'Legacy attachment note',
+      description: '',
+      type: 'image',
+      category: 'Personal',
+      status: 'active',
+      priority: 'medium',
+      dueDate: '',
+      tags: [],
+      position: { x: 0, y: 0 },
+      attachments: [
+        {
+          id: 'att-json',
+          itemId: 'item-json',
+          fileName: 'legacy.png',
+          fileType: 'image/png',
+          fileSize: attachmentBlob.size,
+          blob: attachmentBlob,
+          previewUrl: 'blob:legacy',
+          createdAt: '2026-05-15T00:00:00.000Z',
+        },
+      ],
+      checklist: [],
+      createdAt: '2026-05-15T00:00:00.000Z',
+      updatedAt: '2026-05-15T00:00:00.000Z',
+    };
+
+    const imported = importBackup(exportBackup([item], []));
+    const attachment = imported.items[0].attachments[0];
+
+    expect(attachment.blob).toBeInstanceOf(Blob);
+    expect(attachment.blob.size).toBe(0);
+    expect(attachment.previewUrl).toBeUndefined();
+  });
+
   it('round-trips attachment blobs in ZIP backups', async () => {
     const attachmentBlob = new Blob(['image bytes'], { type: 'image/png' });
     const item: Item = {

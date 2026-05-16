@@ -362,19 +362,37 @@ function persistCurrent(get: () => ItemState, persistEnabled: boolean): void {
 function restoreAttachmentPreviews(item: Item): Item {
   return {
     ...item,
-    attachments: item.attachments.map((attachment) => ({
-      ...attachment,
-      previewUrl: createAttachmentPreviewUrl(attachment.blob),
-    })),
+    attachments: item.attachments.map((attachment) => {
+      const blob = normalizeAttachmentBlob(attachment.blob, attachment.fileType);
+      return {
+        ...attachment,
+        blob,
+        previewUrl: createAttachmentPreviewUrl(blob),
+      };
+    }),
   };
 }
 
 function createAttachmentPreviewUrl(blob: Blob): string | undefined {
-  if (!blob.type.startsWith('image/') || typeof URL.createObjectURL !== 'function') {
+  if (!isBlobLike(blob) || !blob.type.startsWith('image/') || typeof URL.createObjectURL !== 'function') {
     return undefined;
   }
 
   return URL.createObjectURL(blob);
+}
+
+function normalizeAttachmentBlob(blob: Blob, fileType: string): Blob {
+  return isBlobLike(blob) ? blob : new Blob([], { type: fileType });
+}
+
+function isBlobLike(value: unknown): value is Blob {
+  return (
+    value instanceof Blob ||
+    (typeof value === 'object' &&
+      value !== null &&
+      typeof (value as Blob).size === 'number' &&
+      typeof (value as Blob).type === 'string')
+  );
 }
 
 function revokeAttachmentPreviewUrl(url: string): void {
