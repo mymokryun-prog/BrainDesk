@@ -65,9 +65,9 @@ export function AppShell() {
   }, [createItem, filters.category, selectItem]);
 
   return (
-    <div className="flex h-screen min-h-[720px] bg-mist text-ink">
+    <div className="flex h-screen min-h-[720px] overflow-hidden bg-mist text-ink max-xl:min-h-0 max-xl:flex-col">
       <LeftSidebar />
-      <main className="relative min-w-0 flex-1 border-x border-white/80">
+      <main className="relative min-h-0 min-w-0 flex-1 border-x border-white/80 max-xl:border-x-0 max-xl:border-y">
         {!isReady && (
           <div className="absolute inset-0 z-20 grid place-items-center bg-mist/80 text-sm font-medium text-graphite">
             Loading local canvas

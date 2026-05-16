@@ -42,7 +42,7 @@ export function RightDetailPanel() {
 
   if (!selectedItem) {
     return (
-      <aside className="flex h-full w-[356px] flex-col bg-white px-5 py-5 shadow-panel">
+      <aside className="flex h-full w-[356px] flex-col bg-white px-5 py-5 shadow-panel max-xl:h-auto max-xl:max-h-[38vh] max-xl:w-full">
         <div className="grid flex-1 place-items-center text-center text-sm text-graphite/60">
           Select or create an item to edit its details.
         </div>
@@ -55,7 +55,7 @@ export function RightDetailPanel() {
   }
 
   return (
-    <aside className="flex h-full w-[380px] flex-col overflow-hidden bg-white px-5 py-5 shadow-panel">
+    <aside className="flex h-full w-[380px] flex-col overflow-hidden bg-white px-5 py-5 shadow-panel max-xl:h-auto max-xl:max-h-[42vh] max-xl:w-full max-xl:py-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-graphite/55">Detail</p>

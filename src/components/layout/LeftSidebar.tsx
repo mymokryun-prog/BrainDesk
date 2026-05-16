@@ -34,7 +34,7 @@ export function LeftSidebar() {
   }, []);
 
   return (
-    <aside className="flex h-full w-[292px] flex-col bg-white/90 px-4 py-5 shadow-panel">
+    <aside className="flex h-full w-[292px] flex-col bg-white/90 px-4 py-5 shadow-panel max-xl:h-auto max-xl:w-full max-xl:max-h-[34vh] max-xl:overflow-auto max-xl:py-4">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-graphite/55">NeuroTask</p>
         <h1 className="mt-1 text-2xl font-semibold text-ink">Canvas</h1>
@@ -102,12 +102,12 @@ export function LeftSidebar() {
         </FilterSelect>
       </section>
 
-      <section className="mt-5 min-h-0 flex-1">
+      <section className="mt-5 min-h-0 flex-1 max-xl:flex-none">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-graphite/55">Items</h2>
           <span className="text-xs text-graphite/55">{filteredItems.length}</span>
         </div>
-        <div className="mt-2 max-h-[30vh] space-y-2 overflow-auto pr-1">
+        <div className="mt-2 max-h-[30vh] space-y-2 overflow-auto pr-1 max-xl:grid max-xl:max-h-28 max-xl:grid-cols-2 max-xl:gap-2 max-xl:space-y-0">
           {filteredItems.map((item) => (
             <button
               key={item.id}

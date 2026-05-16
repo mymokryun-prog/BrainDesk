@@ -42,13 +42,13 @@ export function BottomToolbar() {
   }
 
   return (
-    <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-2">
+    <div className="absolute bottom-5 left-1/2 z-20 flex max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col items-center gap-2">
       {importError && (
         <div className="rounded-md border border-coral/30 bg-white px-3 py-2 text-xs font-medium text-coral shadow-panel">
           {importError}
         </div>
       )}
-      <div className="flex items-center gap-2 rounded-lg border border-white/70 bg-white/88 p-2 shadow-panel backdrop-blur">
+      <div className="flex max-w-full items-center gap-2 overflow-x-auto rounded-lg border border-white/70 bg-white/88 p-2 shadow-panel backdrop-blur">
         <Button
           title="Fit view"
           icon={<Scan size={16} />}
