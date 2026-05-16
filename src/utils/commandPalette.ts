@@ -49,3 +49,13 @@ export function createItemSearchCommands(items: Item[], selectItem: (id: string)
       run: () => selectItem(item.id),
     }));
 }
+
+export function getNextCommandIndex(
+  currentIndex: number,
+  commandCount: number,
+  direction: 'up' | 'down',
+): number {
+  if (commandCount <= 0) return 0;
+  const offset = direction === 'down' ? 1 : -1;
+  return (currentIndex + offset + commandCount) % commandCount;
+}

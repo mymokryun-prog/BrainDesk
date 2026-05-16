@@ -5,6 +5,7 @@ import {
   createItemInputFromCommandQuery,
   createItemSearchCommands,
   filterCommands,
+  getNextCommandIndex,
   type CommandAction,
 } from '../../utils/commandPalette';
 import { useItemStore } from '../../store/itemStore';
@@ -17,6 +18,7 @@ interface CommandPaletteProps {
 export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
+  const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
   const itemsById = useItemStore((state) => state.items);
   const filters = useItemStore((state) => state.filters);
   const selectedItemId = useItemStore((state) => state.selectedItemId);
@@ -31,6 +33,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   useEffect(() => {
     if (!open) return;
     setQuery('');
+    setSelectedCommandIndex(0);
     window.setTimeout(() => inputRef.current?.focus(), 0);
   }, [open]);
 
@@ -189,6 +192,16 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     return dynamicCreateCommand ? [dynamicCreateCommand, ...filtered] : filtered;
   }, [commands, dynamicCreateCommand, itemCommands, query]);
 
+  useEffect(() => {
+    setSelectedCommandIndex(0);
+  }, [query]);
+
+  useEffect(() => {
+    if (selectedCommandIndex >= filteredCommands.length) {
+      setSelectedCommandIndex(Math.max(0, filteredCommands.length - 1));
+    }
+  }, [filteredCommands.length, selectedCommandIndex]);
+
   function runCommand(command: CommandAction) {
     command.run();
     onClose();
@@ -213,9 +226,18 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             placeholder="Run a command or search actions"
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === 'Enter' && filteredCommands[0]) {
+              if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
                 event.preventDefault();
-                runCommand(filteredCommands[0]);
+                setSelectedCommandIndex((currentIndex) =>
+                  getNextCommandIndex(currentIndex, filteredCommands.length, event.key === 'ArrowDown' ? 'down' : 'up'),
+                );
+                return;
+              }
+
+              const selectedCommand = filteredCommands[selectedCommandIndex];
+              if (event.key === 'Enter' && selectedCommand) {
+                event.preventDefault();
+                runCommand(selectedCommand);
               }
             }}
           />
@@ -225,10 +247,15 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           {filteredCommands.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-graphite/60">No matching commands.</div>
           ) : (
-            filteredCommands.map((command) => (
+            filteredCommands.map((command, index) => {
+              const isSelected = index === selectedCommandIndex;
+              return (
               <button
                 key={command.id}
-                className="flex w-full items-center justify-between gap-4 rounded-md px-3 py-3 text-left hover:bg-mist"
+                className={`flex w-full items-center justify-between gap-4 rounded-md px-3 py-3 text-left ${
+                  isSelected ? 'bg-mist ring-1 ring-fern/25' : 'hover:bg-mist'
+                }`}
+                aria-selected={isSelected}
                 onClick={() => runCommand(command)}
               >
                 <span>
@@ -241,7 +268,8 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                   </span>
                 )}
               </button>
-            ))
+              );
+            })
           )}
         </div>
         <div className="flex items-center justify-between border-t border-graphite/10 px-4 py-3 text-xs text-graphite/55">

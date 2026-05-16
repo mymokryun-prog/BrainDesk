@@ -3,6 +3,7 @@ import {
   createItemInputFromCommandQuery,
   createItemSearchCommands,
   filterCommands,
+  getNextCommandIndex,
   isEditableShortcutTarget,
   type CommandAction,
 } from '../utils/commandPalette';
@@ -67,6 +68,13 @@ describe('command palette utilities', () => {
     itemCommands[0].run();
 
     expect(selectedIds).toEqual(['item-1']);
+  });
+
+  it('cycles command selection with arrow navigation', () => {
+    expect(getNextCommandIndex(0, 3, 'down')).toBe(1);
+    expect(getNextCommandIndex(2, 3, 'down')).toBe(0);
+    expect(getNextCommandIndex(0, 3, 'up')).toBe(2);
+    expect(getNextCommandIndex(0, 0, 'down')).toBe(0);
   });
 });
 
