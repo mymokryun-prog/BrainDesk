@@ -51,6 +51,7 @@ interface ItemState {
     targetItemId: string,
     input?: Partial<Pick<Relationship, 'label' | 'strength'>>,
   ) => Relationship;
+  updateRelationship: (id: string, updates: Partial<Pick<Relationship, 'label' | 'strength'>>) => void;
   deleteRelationship: (id: string) => void;
   setFilters: (filters: Partial<ItemFilters>) => void;
   setViewMode: (viewMode: ViewMode) => void;
@@ -162,6 +163,25 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
       }));
       persistCurrent(get, persistEnabled);
       return relationship;
+    },
+    updateRelationship: (id, updates) => {
+      set((state) => {
+        const relationship = state.relationships[id];
+        if (!relationship) return state;
+
+        return {
+          relationships: {
+            ...state.relationships,
+            [id]: {
+              ...relationship,
+              ...updates,
+              id,
+              strength: normalizeRelationshipStrength(updates.strength ?? relationship.strength),
+            },
+          },
+        };
+      });
+      persistCurrent(get, persistEnabled);
     },
     deleteRelationship: (id) => {
       set((state) => {
@@ -307,6 +327,10 @@ export function getFilteredItems(state: Pick<ItemState, 'items' | 'filters'>): I
 
 function matchesFilter<T extends string>(value: T, filter: T | 'All'): boolean {
   return filter === 'All' || value === filter;
+}
+
+function normalizeRelationshipStrength(strength: number): number {
+  return Math.min(5, Math.max(1, Math.round(strength)));
 }
 
 function toRecord<T extends { id: string }>(items: T[]): Record<string, T> {

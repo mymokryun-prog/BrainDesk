@@ -60,6 +60,20 @@ describe('item store', () => {
     expect(store.getState().relationships[firstRelationship.id].label).toBe('drives');
   });
 
+  it('updates relationship labels and strength', () => {
+    const store = createItemStore({ seed: false, persist: false });
+    const source = store.createItem({ title: 'Risk', category: 'Top Priority', type: 'risk' });
+    const target = store.createItem({ title: 'Decision', category: 'Company', type: 'decision' });
+    const relationship = store.createRelationship(source.id, target.id, { label: 'related', strength: 2 });
+
+    store.getState().updateRelationship(relationship.id, { label: 'blocks', strength: 5 });
+
+    expect(store.getState().relationships[relationship.id]).toMatchObject({
+      label: 'blocks',
+      strength: 5,
+    });
+  });
+
   it('adds and deletes attachments on an item', () => {
     const store = createItemStore({ seed: false, persist: false });
     const item = store.createItem({ title: 'Screenshot memo', category: 'Personal', type: 'screenshot' });

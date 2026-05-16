@@ -21,6 +21,7 @@ export function RightDetailPanel() {
   const updateChecklistItem = useItemStore((state) => state.updateChecklistItem);
   const deleteChecklistItem = useItemStore((state) => state.deleteChecklistItem);
   const createRelationship = useItemStore((state) => state.createRelationship);
+  const updateRelationship = useItemStore((state) => state.updateRelationship);
   const deleteRelationship = useItemStore((state) => state.deleteRelationship);
   const selectedItem = selectedItemId ? items[selectedItemId] : undefined;
   const [descriptionMode, setDescriptionMode] = useState<'edit' | 'preview'>('edit');
@@ -184,6 +185,7 @@ export function RightDetailPanel() {
           relationships={relationships}
           selectedItem={selectedItem}
           createRelationship={createRelationship}
+          updateRelationship={updateRelationship}
           deleteRelationship={deleteRelationship}
         />
 

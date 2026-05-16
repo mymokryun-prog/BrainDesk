@@ -13,6 +13,7 @@ interface LinkedItemsSectionProps {
     targetItemId: string,
     input?: Partial<Pick<Relationship, 'label' | 'strength'>>,
   ) => Relationship;
+  updateRelationship: (id: string, updates: Partial<Pick<Relationship, 'label' | 'strength'>>) => void;
   deleteRelationship: (id: string) => void;
 }
 
@@ -21,6 +22,7 @@ export function LinkedItemsSection({
   relationships,
   selectedItem,
   createRelationship,
+  updateRelationship,
   deleteRelationship,
 }: LinkedItemsSectionProps) {
   const [linkTargetId, setLinkTargetId] = useState('');
@@ -84,11 +86,30 @@ export function LinkedItemsSection({
           const otherId =
             relationship.sourceItemId === selectedItem.id ? relationship.targetItemId : relationship.sourceItemId;
           return (
-            <div key={relationship.id} className="flex items-center justify-between gap-2 rounded-md bg-mist px-3 py-2 text-sm">
-              <span className="truncate">{items[otherId]?.title ?? 'Missing item'}</span>
-              <button className="text-coral" onClick={() => deleteRelationship(relationship.id)}>
-                <Trash2 size={14} />
-              </button>
+            <div key={relationship.id} className="rounded-md bg-mist px-3 py-2 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate font-medium">{items[otherId]?.title ?? 'Missing item'}</span>
+                <button className="text-coral" onClick={() => deleteRelationship(relationship.id)}>
+                  <Trash2 size={14} />
+                </button>
+              </div>
+              <div className="mt-2 grid grid-cols-[1fr_72px] gap-2">
+                <input
+                  className="field-input !bg-white"
+                  aria-label={`Relationship label for ${items[otherId]?.title ?? 'linked item'}`}
+                  value={relationship.label}
+                  onChange={(event) => updateRelationship(relationship.id, { label: event.target.value })}
+                />
+                <input
+                  className="field-input !bg-white"
+                  aria-label={`Relationship strength for ${items[otherId]?.title ?? 'linked item'}`}
+                  max={5}
+                  min={1}
+                  type="number"
+                  value={relationship.strength}
+                  onChange={(event) => updateRelationship(relationship.id, { strength: Number(event.target.value) })}
+                />
+              </div>
             </div>
           );
         })}
