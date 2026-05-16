@@ -14,10 +14,12 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
   const filters = useItemStore((state) => state.filters);
   const selectedItemId = useItemStore((state) => state.selectedItemId);
+  const isFocusMode = useItemStore((state) => state.isFocusMode);
   const createItem = useItemStore((state) => state.createItem);
   const deleteItem = useItemStore((state) => state.deleteItem);
   const selectItem = useItemStore((state) => state.selectItem);
   const setFilters = useItemStore((state) => state.setFilters);
+  const setFocusMode = useItemStore((state) => state.setFocusMode);
   const setViewMode = useItemStore((state) => state.setViewMode);
 
   useEffect(() => {
@@ -88,6 +90,17 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         run: () => window.dispatchEvent(new Event('neurotask:fit')),
       },
       {
+        id: 'toggle-focus-mode',
+        title: isFocusMode ? 'Exit focus mode' : 'Enter focus mode',
+        description: selectedItemId
+          ? 'Show only the selected item and directly linked nodes.'
+          : 'Select an item before using focus mode.',
+        keywords: ['focus', 'selected', 'connections'],
+        run: () => {
+          if (selectedItemId) setFocusMode(!isFocusMode);
+        },
+      },
+      {
         id: 'show-list-view',
         title: 'Show list view',
         description: 'Review visible items in a table.',
@@ -132,7 +145,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         },
       },
     ],
-    [createItem, deleteItem, filters.category, selectItem, selectedItemId, setFilters, setViewMode],
+    [createItem, deleteItem, filters.category, isFocusMode, selectItem, selectedItemId, setFilters, setFocusMode, setViewMode],
   );
 
   const filteredCommands = filterCommands(commands, query);

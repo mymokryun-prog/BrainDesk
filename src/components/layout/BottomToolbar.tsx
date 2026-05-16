@@ -9,8 +9,10 @@ export function BottomToolbar() {
   const itemsById = useItemStore((state) => state.items);
   const relationshipsById = useItemStore((state) => state.relationships);
   const viewMode = useItemStore((state) => state.viewMode);
+  const isFocusMode = useItemStore((state) => state.isFocusMode);
   const replaceWorkspace = useItemStore((state) => state.replaceWorkspace);
   const setViewMode = useItemStore((state) => state.setViewMode);
+  const toggleFocusMode = useItemStore((state) => state.toggleFocusMode);
   const items = Object.values(itemsById);
   const relationships = Object.values(relationshipsById);
 
@@ -48,7 +50,12 @@ export function BottomToolbar() {
           icon={<Scan size={16} />}
           onClick={() => window.dispatchEvent(new Event('neurotask:fit'))}
         />
-        <Button title="Focus mode" icon={<Focus size={16} />} />
+        <Button
+          title="Focus mode"
+          icon={<Focus size={16} />}
+          variant={isFocusMode ? 'primary' : 'secondary'}
+          onClick={toggleFocusMode}
+        />
         <Button
           title="List view"
           icon={<List size={16} />}

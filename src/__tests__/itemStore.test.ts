@@ -69,6 +69,16 @@ describe('item store', () => {
     expect(store.getState().viewMode).toBe('list');
   });
 
+  it('enables focus mode in brain view', () => {
+    const store = createItemStore({ seed: false, persist: false });
+    store.getState().setViewMode('list');
+
+    store.getState().setFocusMode(true);
+
+    expect(store.getState().isFocusMode).toBe(true);
+    expect(store.getState().viewMode).toBe('brain');
+  });
+
   it('starts with useful sample nodes when seeded', () => {
     const items = createInitialItems();
 

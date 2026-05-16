@@ -17,6 +17,7 @@ import type { Item } from '../../types/item';
 import { getFilteredItems, useItemStore } from '../../store/itemStore';
 import { BrainShapeBackdrop } from './BrainShapeBackdrop';
 import { NeuroNode } from './NeuroNode';
+import { getFocusedItemIds } from '../../utils/focusMode';
 
 const nodeTypes = { neuro: NeuroNode };
 
@@ -34,24 +35,30 @@ function BrainCanvasInner() {
   const relationshipsById = useItemStore((state) => state.relationships);
   const selectedItemId = useItemStore((state) => state.selectedItemId);
   const filters = useItemStore((state) => state.filters);
+  const isFocusMode = useItemStore((state) => state.isFocusMode);
   const selectItem = useItemStore((state) => state.selectItem);
   const updateItemPosition = useItemStore((state) => state.updateItemPosition);
   const createRelationship = useItemStore((state) => state.createRelationship);
 
   const relationships = useMemo(() => Object.values(relationshipsById), [relationshipsById]);
   const visibleItems = useMemo(() => getFilteredItems({ items: itemsById, filters }), [filters, itemsById]);
-  const visibleIds = useMemo(() => new Set(visibleItems.map((item) => item.id)), [visibleItems]);
+  const focusedIds = useMemo(
+    () => getFocusedItemIds(isFocusMode ? selectedItemId : undefined, visibleItems, relationships),
+    [isFocusMode, relationships, selectedItemId, visibleItems],
+  );
+  const displayedItems = useMemo(() => visibleItems.filter((item) => focusedIds.has(item.id)), [focusedIds, visibleItems]);
+  const visibleIds = useMemo(() => new Set(displayedItems.map((item) => item.id)), [displayedItems]);
 
   const initialNodes = useMemo<Node[]>(
     () =>
-      visibleItems.map((item) => ({
+      displayedItems.map((item) => ({
         id: item.id,
         type: 'neuro',
         position: item.position,
         data: { item },
         selected: item.id === selectedItemId,
       })),
-    [selectedItemId, visibleItems],
+    [displayedItems, selectedItemId],
   );
 
   const initialEdges = useMemo<Edge[]>(
@@ -116,6 +123,11 @@ function BrainCanvasInner() {
   return (
     <div className="relative h-full overflow-hidden bg-[#edf2ef]">
       <BrainShapeBackdrop />
+      {isFocusMode && selectedItemId && (
+        <div className="absolute left-1/2 top-5 z-20 -translate-x-1/2 rounded-md border border-brass/25 bg-white/88 px-4 py-2 text-sm font-semibold text-graphite shadow-panel backdrop-blur">
+          Focus mode: selected item and direct links
+        </div>
+      )}
       <ReactFlow
         nodes={nodes}
         edges={edges}

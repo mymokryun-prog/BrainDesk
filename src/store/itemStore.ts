@@ -26,6 +26,7 @@ interface ItemState {
   selectedItemId?: string;
   filters: ItemFilters;
   viewMode: ViewMode;
+  isFocusMode: boolean;
   isReady: boolean;
   error?: string;
   createItem: (input: ItemInput) => Item;
@@ -41,6 +42,8 @@ interface ItemState {
   deleteRelationship: (id: string) => void;
   setFilters: (filters: Partial<ItemFilters>) => void;
   setViewMode: (viewMode: ViewMode) => void;
+  setFocusMode: (enabled: boolean) => void;
+  toggleFocusMode: () => void;
   addAttachment: (itemId: string, file: File | Blob, fileName?: string) => Attachment;
   deleteAttachment: (itemId: string, attachmentId: string) => void;
   toggleChecklistItem: (itemId: string, checklistItemId: string) => void;
@@ -82,6 +85,7 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
     selectedItemId: initialItems[0]?.id,
     filters: defaultFilters,
     viewMode: 'brain',
+    isFocusMode: false,
     isReady: options.seed !== false,
     createItem: (input) => {
       const timestamp = nowIso();
@@ -179,6 +183,12 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
     },
     setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
     setViewMode: (viewMode) => set({ viewMode }),
+    setFocusMode: (enabled) => set({ isFocusMode: enabled, viewMode: enabled ? 'brain' : get().viewMode }),
+    toggleFocusMode: () =>
+      set((state) => ({
+        isFocusMode: !state.isFocusMode,
+        viewMode: !state.isFocusMode ? 'brain' : state.viewMode,
+      })),
     addAttachment: (itemId, file, fileName) => {
       const item = get().items[itemId];
       if (!item) throw new Error('Select an item before attaching a file.');
