@@ -160,6 +160,16 @@ describe('item store', () => {
     expect(store.getState().viewMode).toBe('brain');
   });
 
+  it('arranges items into brain regions', () => {
+    const store = createItemStore({ seed: false, persist: false });
+    const company = store.createItem({ title: 'Company Strategy', category: 'Company', type: 'project' });
+    const family = store.createItem({ title: 'Family Plan', category: 'Family', type: 'task' });
+
+    store.getState().arrangeItems();
+
+    expect(store.getState().items[company.id].position.x).toBeLessThan(store.getState().items[family.id].position.x);
+  });
+
   it('starts with useful sample nodes when seeded', () => {
     const items = createInitialItems();
 

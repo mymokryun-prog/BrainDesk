@@ -14,6 +14,7 @@ import type {
 import { loadWorkspace, persistWorkspace } from '../db/repositories';
 import { nowIso } from '../utils/dates';
 import { createInitialItems, createInitialRelationships } from '../utils/seedData';
+import { arrangeItemsInBrain } from '../utils/brainLayout';
 import {
   createAttachmentRecord,
   createChecklistEntry,
@@ -45,6 +46,7 @@ interface ItemState {
   updateItem: (id: string, updates: Partial<Item>) => void;
   deleteItem: (id: string) => void;
   updateItemPosition: (id: string, position: Position) => void;
+  arrangeItems: () => void;
   selectItem: (id?: string) => void;
   createRelationship: (
     sourceItemId: string,
@@ -146,6 +148,25 @@ export function createItemStore(options: StoreOptions = { seed: true }): ItemSto
     },
     updateItemPosition: (id, position) => {
       get().updateItem(id, { position });
+    },
+    arrangeItems: () => {
+      set((state) => {
+        const arrangedPositions = arrangeItemsInBrain(Object.values(state.items));
+
+        return {
+          items: Object.fromEntries(
+            Object.values(state.items).map((item) => [
+              item.id,
+              {
+                ...item,
+                position: arrangedPositions[item.id] ?? item.position,
+                updatedAt: nowIso(),
+              },
+            ]),
+          ),
+        };
+      });
+      persistCurrent(get, persistEnabled);
     },
     selectItem: (id) => set({ selectedItemId: id }),
     createRelationship: (sourceItemId, targetItemId, input = {}) => {

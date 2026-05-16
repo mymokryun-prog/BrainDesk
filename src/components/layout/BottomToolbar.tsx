@@ -1,4 +1,4 @@
-import { Braces, CalendarDays, Command, Download, Focus, List, Scan, Upload } from 'lucide-react';
+import { Braces, CalendarDays, Command, Download, Focus, List, Network, Scan, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../common/Button';
 import { useItemStore } from '../../store/itemStore';
@@ -13,6 +13,7 @@ export function BottomToolbar() {
   const replaceWorkspace = useItemStore((state) => state.replaceWorkspace);
   const setViewMode = useItemStore((state) => state.setViewMode);
   const toggleFocusMode = useItemStore((state) => state.toggleFocusMode);
+  const arrangeItems = useItemStore((state) => state.arrangeItems);
   const items = Object.values(itemsById);
   const relationships = Object.values(relationshipsById);
 
@@ -53,6 +54,14 @@ export function BottomToolbar() {
           title="Fit view"
           icon={<Scan size={16} />}
           onClick={() => window.dispatchEvent(new Event('neurotask:fit'))}
+        />
+        <Button
+          title="Arrange brain"
+          icon={<Network size={16} />}
+          onClick={() => {
+            arrangeItems();
+            window.dispatchEvent(new Event('neurotask:fit'));
+          }}
         />
         <Button
           title="Focus mode"
